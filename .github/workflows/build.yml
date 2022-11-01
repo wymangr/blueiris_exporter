@@ -25,7 +25,9 @@ jobs:
         run: GOOS=windows GOARCH=amd64 go build -o bin/blueiris_exporter-amd64.exe
       
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
-          name: blueiris_exporter_binaries
-          path: bin
+          asset_path: bin
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
