@@ -468,15 +468,16 @@
         "y": 0
       },
       "id": 12,
-      "interval": "5s",
-      "maxDataPoints": 10000,
       "options": {
         "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
+          "enablePagination": false,
+          "fields": [
+            "Value (lastNotNull)"
           ],
-          "show": false
+          "reducer": [
+            "mean"
+          ],
+          "show": true
         },
         "showHeader": true,
         "sortBy": [
@@ -498,7 +499,7 @@
           "expr": "blueiris_ai_duration_distinct{camera=~\"$camera\", type=~\"$type\"}",
           "format": "table",
           "instant": false,
-          "interval": "5s",
+          "interval": "",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -530,6 +531,12 @@
                 "operation": "groupby"
               },
               "instance": {
+                "aggregations": []
+              },
+              "job": {
+                "aggregations": []
+              },
+              "name": {
                 "aggregations": []
               },
               "object": {
@@ -928,13 +935,13 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "BlueIris",
   "uid": "NePvW0NVz",
-  "version": 35,
+  "version": 37,
   "weekStart": ""
 }
