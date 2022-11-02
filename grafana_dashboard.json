@@ -78,6 +78,7 @@
       },
       "fieldConfig": {
         "defaults": {
+          "decimals": 0,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -129,7 +130,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "count(rate(blueiris_ai_restarted[$__range]))",
+          "expr": "sum(delta(blueiris_ai_restarted[$__range]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -281,6 +282,7 @@
       },
       "fieldConfig": {
         "defaults": {
+          "decimals": 0,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -332,7 +334,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(blueiris_logerror)",
+          "expr": "sum(delta(blueiris_logerror[$__range]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -496,12 +498,13 @@
           "expr": "blueiris_ai_duration_distinct{camera=~\"$camera\", type=~\"$type\"}",
           "format": "table",
           "instant": false,
-          "interval": "",
+          "interval": "5s",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
+      "timeFrom": "6h",
       "title": "AI Analysis",
       "transformations": [
         {
@@ -627,7 +630,7 @@
       },
       "id": 17,
       "interval": "5s",
-      "maxDataPoints": 10000,
+      "maxDataPoints": 9000,
       "options": {
         "legend": {
           "calcs": [],
@@ -722,8 +725,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 24,
+        "h": 10,
+        "w": 17,
         "x": 0,
         "y": 13
       },
@@ -786,13 +789,26 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 0,
-        "y": 22
+        "h": 10,
+        "w": 7,
+        "x": 17,
+        "y": 13
       },
       "id": 20,
       "options": {
@@ -803,7 +819,8 @@
           ],
           "show": false
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": []
       },
       "pluginVersion": "9.2.2",
       "targets": [
@@ -826,6 +843,9 @@
           "id": "groupBy",
           "options": {
             "fields": {
+              "Time": {
+                "aggregations": []
+              },
               "Value": {
                 "aggregations": [
                   "lastNotNull"
@@ -915,6 +935,6 @@
   "timezone": "",
   "title": "BlueIris",
   "uid": "NePvW0NVz",
-  "version": 28,
+  "version": 35,
   "weekStart": ""
 }
