@@ -2,6 +2,7 @@
 Prometheus exporter for Blue Iris.
 Confirmed working on Blue Iris version 5.6.2.8
 
+
 ## Flags
 
 Flag     | Description | Default value | Required
