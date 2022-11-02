@@ -41,6 +41,7 @@ blueiris_exporter-amd64.exe --cameras=C1,C2,C3 --logpath=C:\BlueIris\log
 
 You can also run blueiris_exporter as a Windows service in the background.
 Open command prompt as `Administrator` (Start ->CMD->right click->Run as administrator) and change directory to the directory you saved the executiable.
+`IMPORTANT`: You may need to run the exporter once via command line shown above. A firewall allow window will pop up that you must click allow!
 ```
 blueiris_exporter-amd64.exe --service.install --cameras=C1,C2,C3 --logpath=C:\BlueIris\log --telemetry.addr=:1234
 blueiris_exporter-amd64.exe --service.start
