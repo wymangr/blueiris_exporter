@@ -14,7 +14,7 @@ jobs:
           go-version: 1.16.6
 
       - name: Build Linux
-        run: GOOS=linux GOARCH=amd64 go build -o blueiris_exporter-amd64-linux
+        run: GOOS=linux GOARCH=amd64 go build -o blueiris_exporter-amd64-linux -tags LINUX
       
       - name: Build Windows
         run: GOOS=windows GOARCH=amd64 go build -o blueiris_exporter-amd64.exe

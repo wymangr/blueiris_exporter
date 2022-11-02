@@ -35,8 +35,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	dir := logpath
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		fmt.Println("BlueIris - Error reading blue_iris log directory")
-		fmt.Fprintln(os.Stderr, err)
+		common.BIlogger(fmt.Sprintf("BlueIris - Error reading blue_iris log directory. Error: %v", err), "error")
 		ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues("BlueIris").Desc(), prometheus.CounterValue, 1, "BlueIris")
 		return
 	}
@@ -45,7 +44,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	for _, f := range files {
 		fi, err := os.Stat(dir + f.Name())
 		if err != nil {
-			fmt.Println(err)
+			common.BIlogger(err.Error(), "error")
 		}
 		currTime := fi.ModTime().Unix()
 		if currTime > newestTime {
@@ -56,8 +55,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 
 	file, err := os.Open(dir + newestFile)
 	if err != nil {
-		fmt.Println("BlueIris - Error opening latest log file")
-		fmt.Fprintln(os.Stderr, err)
+		common.BIlogger(fmt.Sprintf("BlueIris - Error opening latest log file. Error: %v", err), "error")
 		ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues("BlueIris").Desc(), prometheus.CounterValue, 1, "BlueIris")
 		return
 	}
@@ -74,7 +72,12 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 				reasonMatch := r.SubexpIndex("reason")
 
 				camera := match[cameraMatch]
-				duration, _ := strconv.ParseFloat(match[durationMatch], 64)
+				duration, err := strconv.ParseFloat(match[durationMatch], 64)
+				if err != nil {
+					common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
+					ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
+					continue
+				}
 				alertcount := aiMetrics[camera+"cancelled"].alertcount
 				alertcount++
 
@@ -95,7 +98,12 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 				percentMatch := r.SubexpIndex("percent")
 
 				camera := match[cameraMatch]
-				duration, _ := strconv.ParseFloat(match[durationMatch], 64)
+				duration, err := strconv.ParseFloat(match[durationMatch], 64)
+				if err != nil {
+					common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
+					ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
+					continue
+				}
 				alertcount := aiMetrics[camera+"alert"].alertcount
 				alertcount++
 

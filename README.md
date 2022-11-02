@@ -5,11 +5,17 @@ Confirmed working on Blue Iris version 5.6.2.8
 ## Flags
 
 Flag     | Description | Default value | Required
----------|-------------|--------------------|---
+-|-|-|-
 `--cameras` | Comma-separated list of camera shot names that match Blue Iris | None | Yes
 `--telemetry.addr` | addresses on which to expose metrics | `:2112` | No
 `--logpath` | Directory path to the Blue Iris Logs | `C:\BlueIris\log\` | Yes
 `--telemetry.path` | URL path for surfacing collected metrics" | `/metrics` | No
+`--service.install` | Install blueiris_exporter as a Windows service | None | No
+`--service.uninstall` | Uninstall blueiris_exporter Windows service | None | No
+`--service.start` | Start blueris_exporter Windows service | None | No
+`--service.stop` | Stop blueris_exporter Windows service | None | No
+`--service.pause` | Pause blueris_exporter Windows service | None | No
+`--service.continue` | Continue blueris_exporter Windows service | None | No
 
 ## Installation and Usage
 `blueiris_exporter` listens on HTTP port 2112 by default. See the `--help` output for more options.
@@ -24,11 +30,63 @@ By Default, Blue Iris will break out your log files by month. This means the cou
 
 ## Windows
 
-Install service
+The latest release can be downloaded from the [releases page](https://github.com/wymangr/blueiris_exporter/releases). Save `blueiris_exporter-amd64.exe` to a safe place, it will be required to stay on your system to use blueiris_exporter.
+
+Open a command prompt and change directory to the directory you saved the executiable.
+
+To run the exporter (example):
+```
+blueiris_exporter-amd64.exe --cameras=C1,C2,C3 --logpath=C:\BlueIris\log
+```
+
+You can also run blueiris_exporter as a Windows service in the background.
+Open command prompt as `Administrator` (Start ->CMD->right click->Run as administrator) and change directory to the directory you saved the executiable.
+```
+blueiris_exporter-amd64.exe --service.install --cameras=C1,C2,C3 --logpath=C:\BlueIris\log --telemetry.addr=:1234
+blueiris_exporter-amd64.exe --service.start
+```
+
+If you need to update the config for the service, (Add cameras, update path of the log dir etc) You can do so by uninstalling the service and installing with the new config
+
+```
+blueiris_exporter-amd64.exe --service.stop
+blueiris_exporter-amd64.exe --service.uninstall
+blueiris_exporter-amd64.exe --service.install --cameras=C1,C2,C3,C4 --logpath=C:\BI\log --telemetry.addr=:5678
+blueiris_exporter-amd64.exe --service.start
+```
 
 ### RHEL/CentOS/Fedora
 
-Download the latest release and setup as a service
+Download the latest release from the [releases page](https://github.com/wymangr/blueiris_exporter/releases)
+
+```
+wget -O /usr/bin/blueiris_exporter https://github.com/wymangr/blueiris_exporter/releases/download/<release>/blueiris_exporter-amd64-linux
+chmod +x /usr/bin/blueiris_exporter
+blueiris_exporter --camers=C1,C2,C3 --logpath=/mnt/blueiris/logs
+```
+
+To install as a systemd service, edit and create `/etc/systemd/system/blueiris_exporter.service` with the following content:
+```
+[Unit]
+Description=Blue Iris Exporter
+After=multi-user.target
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/blueiris_exporter --cameras=C1,C2,C3 --logpath=/blue_iris/log --telemetry.addr=:9876
+StandardInput=tty-force
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=blueiris_exporter
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then run `systemctl start blueiris_exporter`
 
 ### Docker
 
