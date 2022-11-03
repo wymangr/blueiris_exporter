@@ -30,6 +30,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	scrapeTime := time.Now()
 	aiMetrics := make(map[string]aidata)
 	errorMetrics := make(map[string]float64)
+	var errorMetricsTotal float64 = 0
 	var restartCount float64 = 0
 
 	dir := logpath
@@ -124,6 +125,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 			matchError := rError.FindStringSubmatch(scanner.Text())
 			ErrorMatch := rError.SubexpIndex("error")
 			e := matchError[ErrorMatch]
+			errorMetricsTotal++
 			if val, ok := errorMetrics[e]; ok {
 				val++
 				errorMetrics[e] = val
@@ -176,6 +178,8 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 					ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, va, er)
 				}
 			}
+		case "logerror_total":
+			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, errorMetricsTotal)
 		}
 	}
 
