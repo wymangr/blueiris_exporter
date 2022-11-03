@@ -130,7 +130,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(delta(blueiris_ai_restarted[$__range]))",
+          "expr": "increase(blueiris_ai_restarted[$__range])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -282,6 +282,9 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
           "decimals": 0,
           "mappings": [],
           "thresholds": {
@@ -334,13 +337,15 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(delta(blueiris_logerror[$__range]))",
+          "expr": "increase(blueiris_logerror_total[$__range])",
+          "hide": false,
           "legendFormat": "__auto",
           "range": true,
-          "refId": "A"
+          "refId": "B"
         }
       ],
       "title": "Log Errors",
+      "transformations": [],
       "type": "stat"
     },
     {
@@ -935,13 +940,13 @@
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "BlueIris",
   "uid": "NePvW0NVz",
-  "version": 37,
+  "version": 38,
   "weekStart": ""
 }

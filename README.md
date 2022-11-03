@@ -134,3 +134,4 @@ ai_duration_distinct | Duration (ms) of the last Blue Iris alert for each camera
 ai_count | Count of the number of times IA analyzed and image
 ai_restarted | Number of times Blue Iris restarted the AI (deepstack)
 logerror | Count of unique errors in the logs
+logerror_total | Count of total errors in the logs
