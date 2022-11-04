@@ -14,7 +14,6 @@ type CollectBool map[bool][]int
 
 type ExporterBlueIris struct {
 	blueIrisServerMetrics map[int]common.MetricInfo
-	cameras               string
 	logpath               string
 }
 
