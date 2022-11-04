@@ -25,7 +25,7 @@ func controlService(name string, command string) error {
 	return err
 }
 
-func installService(name, desc string, cameras string, logpath string, metricsPath string, port string) error {
+func installService(name, desc string, logpath string, metricsPath string, port string) error {
 	err := errors.New("--service.install is not supprted in Linux!")
 	return err
 }
