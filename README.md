@@ -1,6 +1,6 @@
 # blueiris_exporter
 Prometheus exporter for Blue Iris.
-Confirmed working on Blue Iris version 5.6.2.8
+Confirmed working on Blue Iris version's 5.5.0.12 and 5.6.2.8
 
 ## Flags
 
