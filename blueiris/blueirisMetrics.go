@@ -175,7 +175,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 }
 
 func findObject(line string) (match []string, r *regexp.Regexp, matchType string) {
-	if strings.Contains(line, "AI: timeout") {
+	if strings.HasSuffix(line, "AI: timeout") {
 		return nil, nil, ""
 	} else if strings.Contains(line, "DeepStack: Server error") {
 		return nil, nil, ""
