@@ -11,7 +11,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.16.6
+          go-version: 1.18.8
 
       - name: Build Linux
         run: GOOS=linux GOARCH=amd64 go build -o blueiris_exporter-amd64-linux -tags LINUX
