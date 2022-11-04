@@ -180,7 +180,7 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 	} else if strings.Contains(line, "DeepStack: Server error") {
 		return nil, nil, ""
 	} else if strings.Contains(line, "AI:") {
-		r := regexp.MustCompile(`^.+(?P<camera>DW|BY|FD)(\s*AI:\s)(Alert|\[Objects\])\s(?P<object>[aA-zZ]*|cancelled)(:|\s)(?P<percent>[0-9]*)(%\s\[|\[)(?P<reason>.+).+\s(?P<duration>[0-9]*)ms`)
+		r := regexp.MustCompile(`^.+(AM|PM)\s*(?P<camera>[^\s\\]*)(\s*AI:\s)(Alert|\[Objects\])\s(?P<object>[aA-zZ]*|cancelled)(:|\s)(?P<percent>[0-9]*)(%\s\[|\[)(?P<reason>.+).+\s(?P<duration>[0-9]*)ms`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
 			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
@@ -190,7 +190,7 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		}
 
 	} else if strings.Contains(line, "DeepStack:") {
-		r := regexp.MustCompile(`^.+(?P<camera>DW|BY|FD)(\s*DeepStack:\s)(?P<object>Alert\scancelled|[aA-zZ]*)(:|\s)(?P<percent>[0-9]*)(%\s\[|\[)(?P<reason>.+).+\s(?P<duration>[0-9]*)ms`)
+		r := regexp.MustCompile(`^.+(AM|PM)\s*(?P<camera>[^\s\\]*)(\s*DeepStack:\s)(?P<object>Alert\scancelled|[aA-zZ]*)(:|\s)(?P<percent>[0-9]*)(%\s\[|\[)(?P<reason>.+).+\s(?P<duration>[0-9]*)ms`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
 			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
