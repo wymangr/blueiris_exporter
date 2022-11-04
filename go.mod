@@ -3,8 +3,8 @@ module github.com/wymangr/blueiris_exporter
 go 1.18
 
 require (
-	github.com/prometheus/client_golang v1.13.0
-	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
+	github.com/prometheus/client_golang v1.13.1
+	golang.org/x/sys v0.1.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
 
