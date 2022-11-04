@@ -42,7 +42,7 @@ func newMetric(
 	docString string,
 	t prometheus.ValueType,
 	labels []string,
-	f func(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, cameras []string, logpath string),
+	f func(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string),
 	collect CollectBool,
 	ServerMetrics string) common.MetricInfo {
 
@@ -81,20 +81,19 @@ func CollectMetrics(
 	ch chan<- prometheus.Metric,
 	m common.MetricInfo,
 	n string,
-	cameras []string,
 	logpath string,
 ) {
 
 	defer wg.Done()
 
 	if m.SecondaryCollect == nil {
-		m.Function(ch, m, nil, cameras, logpath)
+		m.Function(ch, m, nil, logpath)
 	} else {
 		var secMet []common.MetricInfo
 		secMet = nil
 		for _, i := range m.SecondaryCollect {
 			secMet = append(secMet, blueIrisServerMetrics[i])
 		}
-		m.Function(ch, m, secMet, cameras, logpath)
+		m.Function(ch, m, secMet, logpath)
 	}
 }

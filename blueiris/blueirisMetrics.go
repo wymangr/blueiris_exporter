@@ -25,7 +25,7 @@ type aidata struct {
 
 var latestai = make(map[string]string)
 
-func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, cameras []string, logpath string) {
+func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string) {
 
 	scrapeTime := time.Now()
 	aiMetrics := make(map[string]aidata)
@@ -67,56 +67,63 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 			r := regexp.MustCompile(`^.+(?P<camera>DW|BY|FD)(\s*AI:\s)(Alert|\[Objects\])\s(?P<object>[aA-zZ]*|cancelled)(:|\s)(?P<percent>[0-9]*)(%\s\[|\[)(?P<reason>.+).+\s(?P<duration>[0-9]*)ms`)
 			if strings.Contains(scanner.Text(), "cancelled") {
 				match := r.FindStringSubmatch(scanner.Text())
-				cameraMatch := r.SubexpIndex("camera")
-				durationMatch := r.SubexpIndex("duration")
-				objectMatch := r.SubexpIndex("object")
-				reasonMatch := r.SubexpIndex("reason")
+				if len(match) == 0 {
+					common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", scanner.Text()), "console")
+				} else {
+					cameraMatch := r.SubexpIndex("camera")
+					durationMatch := r.SubexpIndex("duration")
+					objectMatch := r.SubexpIndex("object")
+					reasonMatch := r.SubexpIndex("reason")
 
-				camera := match[cameraMatch]
-				duration, err := strconv.ParseFloat(match[durationMatch], 64)
-				if err != nil {
-					common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
-					ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
-					continue
-				}
-				alertcount := aiMetrics[camera+"cancelled"].alertcount
-				alertcount++
+					camera := match[cameraMatch]
+					duration, err := strconv.ParseFloat(match[durationMatch], 64)
+					if err != nil {
+						common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
+						ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
+						continue
+					}
+					alertcount := aiMetrics[camera+"cancelled"].alertcount
+					alertcount++
 
-				aiMetrics[camera+"cancelled"] = aidata{
-					camera:     camera,
-					duration:   duration,
-					object:     match[objectMatch],
-					alertcount: alertcount,
-					percent:    match[reasonMatch],
-					latest:     scanner.Text(),
+					aiMetrics[camera+"cancelled"] = aidata{
+						camera:     camera,
+						duration:   duration,
+						object:     match[objectMatch],
+						alertcount: alertcount,
+						percent:    match[reasonMatch],
+						latest:     scanner.Text(),
+					}
 				}
 
 			} else if strings.Contains(scanner.Text(), "Objects") {
 				match := r.FindStringSubmatch(scanner.Text())
-				cameraMatch := r.SubexpIndex("camera")
-				durationMatch := r.SubexpIndex("duration")
-				objectMatch := r.SubexpIndex("object")
-				percentMatch := r.SubexpIndex("percent")
+				if len(match) == 0 {
+					common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", scanner.Text()), "error")
+				} else {
+					cameraMatch := r.SubexpIndex("camera")
+					durationMatch := r.SubexpIndex("duration")
+					objectMatch := r.SubexpIndex("object")
+					percentMatch := r.SubexpIndex("percent")
 
-				camera := match[cameraMatch]
-				duration, err := strconv.ParseFloat(match[durationMatch], 64)
-				if err != nil {
-					common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
-					ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
-					continue
+					camera := match[cameraMatch]
+					duration, err := strconv.ParseFloat(match[durationMatch], 64)
+					if err != nil {
+						common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
+						ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
+						continue
+					}
+					alertcount := aiMetrics[camera+"alert"].alertcount
+					alertcount++
+
+					aiMetrics[camera+"alert"] = aidata{
+						camera:     camera,
+						duration:   duration,
+						object:     match[objectMatch],
+						alertcount: alertcount,
+						percent:    match[percentMatch],
+						latest:     scanner.Text(),
+					}
 				}
-				alertcount := aiMetrics[camera+"alert"].alertcount
-				alertcount++
-
-				aiMetrics[camera+"alert"] = aidata{
-					camera:     camera,
-					duration:   duration,
-					object:     match[objectMatch],
-					alertcount: alertcount,
-					percent:    match[percentMatch],
-					latest:     scanner.Text(),
-				}
-
 			}
 		} else if strings.Contains(scanner.Text(), "AI has been restarted") {
 			restartCount++

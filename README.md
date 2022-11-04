@@ -6,7 +6,6 @@ Confirmed working on Blue Iris version 5.6.2.8
 
 Flag     | Description | Default value | Required
 -|-|-|-
-`--cameras` | Comma-separated list of camera shot names that match Blue Iris | None | Yes
 `--telemetry.addr` | addresses on which to expose metrics | `:2112` | No
 `--logpath` | Directory path to the Blue Iris Logs | `C:\BlueIris\log\` | Yes
 `--telemetry.path` | URL path for surfacing collected metrics" | `/metrics` | No
@@ -36,23 +35,23 @@ Open a command prompt and change directory to the directory you saved the execut
 
 To run the exporter (example):
 ```
-blueiris_exporter-amd64.exe --cameras=C1,C2,C3 --logpath=C:\BlueIris\log
+blueiris_exporter-amd64.exe --logpath=C:\BlueIris\log
 ```
 
 You can also run blueiris_exporter as a Windows service in the background.
 Open command prompt as `Administrator` (Start ->CMD->right click->Run as administrator) and change directory to the directory you saved the executiable.
 `IMPORTANT`: You may need to run the exporter once via command line shown above. A firewall allow window will pop up that you must click allow!
 ```
-blueiris_exporter-amd64.exe --service.install --cameras=C1,C2,C3 --logpath=C:\BlueIris\log --telemetry.addr=:1234
+blueiris_exporter-amd64.exe --service.install --logpath=C:\BlueIris\log --telemetry.addr=:1234
 blueiris_exporter-amd64.exe --service.start
 ```
 
-If you need to update the config for the service, (Add cameras, update path of the log dir etc) You can do so by uninstalling the service and installing with the new config
+If you need to update the config for the service, (Update path of the log dir etc) You can do so by uninstalling the service and installing with the new config
 
 ```
 blueiris_exporter-amd64.exe --service.stop
 blueiris_exporter-amd64.exe --service.uninstall
-blueiris_exporter-amd64.exe --service.install --cameras=C1,C2,C3,C4 --logpath=C:\BI\log --telemetry.addr=:5678
+blueiris_exporter-amd64.exe --service.install --logpath=C:\BI\log --telemetry.addr=:5678
 blueiris_exporter-amd64.exe --service.start
 ```
 
@@ -75,7 +74,7 @@ Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/blueiris_exporter --cameras=C1,C2,C3 --logpath=/blue_iris/log --telemetry.addr=:9876
+ExecStart=/usr/bin/blueiris_exporter --logpath=/blue_iris/log --telemetry.addr=:9876
 StandardInput=tty-force
 StandardOutput=syslog
 StandardError=syslog
@@ -96,13 +95,13 @@ The Docker image is not hosted yet on Docker Hub, so you will need to build the 
 ```
 docker build -t <image_name>:<tag> .
 ```
-You can then start up the container, passing in the Blue Iris log directory and a list of camera short names.
+You can then start up the container, passing in the Blue Iris log directory.
 ```bash
 docker run -d \
   -p 2112:2112 \
   -v "/path/to/blueiris/log:/path/to/blueiris/log" \
   <image_name>:<tag> \
-  --logpath=/path/to/blueiris/log --cameras=FD,BY,DW
+  --logpath=/path/to/blueiris/log
 ```
 
 For Docker compose, see example below.
@@ -117,7 +116,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["--logpath=/path/to/blueiris/log", "--cameras=FD,BY,DW"]
+    command: ["--logpath=/path/to/blueiris/log"]
     ports:
       - 2112:2112
     volumes:

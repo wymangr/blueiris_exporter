@@ -199,7 +199,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "count(blueiris_ai_duration{type=\"cancelled\",detail=\"AI: timeout\"}) OR on() vector(0)",
+          "expr": "count(increase(blueiris_ai_duration{type=\"cancelled\",detail=\"AI: timeout\"}[$__range])) +1 OR on() vector(0)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -473,6 +473,7 @@
         "y": 0
       },
       "id": 12,
+      "interval": "5s",
       "options": {
         "footer": {
           "enablePagination": false,
@@ -947,6 +948,6 @@
   "timezone": "",
   "title": "BlueIris",
   "uid": "NePvW0NVz",
-  "version": 38,
+  "version": 41,
   "weekStart": ""
 }
