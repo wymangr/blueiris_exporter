@@ -473,7 +473,8 @@
         "y": 0
       },
       "id": 12,
-      "interval": "5s",
+      "interval": "15s",
+      "maxDataPoints": 9000,
       "options": {
         "footer": {
           "enablePagination": false,
@@ -642,7 +643,7 @@
         "y": 5
       },
       "id": 17,
-      "interval": "5s",
+      "interval": "15s",
       "maxDataPoints": 9000,
       "options": {
         "legend": {
@@ -948,6 +949,6 @@
   "timezone": "",
   "title": "BlueIris",
   "uid": "NePvW0NVz",
-  "version": 41,
+  "version": 45,
   "weekStart": ""
 }
