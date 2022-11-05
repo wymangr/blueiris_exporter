@@ -19,19 +19,31 @@ type aidata struct {
 	duration   float64
 	object     string
 	alertcount float64
-	percent    string
+	detail     string
 	latest     string
 }
 
 var latestai = make(map[string]string)
 
+var (
+	timeoutcount       float64
+	servererrorcount   float64
+	notrespondingcount float64
+	errorMetricsTotal  float64
+	restartCount       float64
+	errorMetrics       map[string]float64
+)
+
 func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string) {
 
 	scrapeTime := time.Now()
 	aiMetrics := make(map[string]aidata)
-	errorMetrics := make(map[string]float64)
-	var errorMetricsTotal float64 = 0
-	var restartCount float64 = 0
+	errorMetrics = make(map[string]float64)
+	errorMetricsTotal = 0
+	restartCount = 0
+	timeoutcount = 0
+	servererrorcount = 0
+	notrespondingcount = 0
 
 	dir := logpath
 	files, err := ioutil.ReadDir(dir)
@@ -63,69 +75,42 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "AI has been restarted") {
-			restartCount++
-		} else {
-			match, r, matchType := findObject(scanner.Text())
-			if (matchType == "ai") || (matchType == "deepstack") {
-				cameraMatch := r.SubexpIndex("camera")
-				durationMatch := r.SubexpIndex("duration")
-				objectMatch := r.SubexpIndex("object")
-				reasonMatch := r.SubexpIndex("reason")
-				percentMatch := r.SubexpIndex("percent")
 
-				camera := match[cameraMatch]
-				duration, err := strconv.ParseFloat(match[durationMatch], 64)
-				if err != nil {
-					common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
-					ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
-					continue
-				}
+		match, r, matchType := findObject(scanner.Text())
+		if (matchType == "alert") || (matchType == "cancelled") {
+			cameraMatch := r.SubexpIndex("camera")
+			durationMatch := r.SubexpIndex("duration")
+			objectMatch := r.SubexpIndex("object")
+			detailMatch := r.SubexpIndex("detail")
 
-				if strings.Contains(match[objectMatch], "cancelled") {
-					alertcount := aiMetrics[camera+"cancelled"].alertcount
-					alertcount++
-
-					aiMetrics[camera+"cancelled"] = aidata{
-						camera:     camera,
-						duration:   duration,
-						object:     "cancelled",
-						alertcount: alertcount,
-						percent:    match[reasonMatch],
-						latest:     scanner.Text(),
-					}
-				} else {
-					alertcount := aiMetrics[camera+"alert"].alertcount
-					alertcount++
-
-					aiMetrics[camera+"alert"] = aidata{
-						camera:     camera,
-						duration:   duration,
-						object:     match[objectMatch],
-						alertcount: alertcount,
-						percent:    match[percentMatch],
-						latest:     scanner.Text(),
-					}
-				}
-			} else if matchType == "error" {
-				ErrorMatch := r.SubexpIndex("error")
-				e := match[ErrorMatch]
-				errorMetricsTotal++
-				if val, ok := errorMetrics[e]; ok {
-					val++
-					errorMetrics[e] = val
-				} else {
-					errorMetrics[e] = 1
-				}
+			camera := match[cameraMatch]
+			duration, err := strconv.ParseFloat(match[durationMatch], 64)
+			if err != nil {
+				common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
+				ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
+				continue
 			}
+
+			alertcount := aiMetrics[camera+matchType].alertcount
+			alertcount++
+
+			aiMetrics[camera+matchType] = aidata{
+				camera:     camera,
+				duration:   duration,
+				object:     match[objectMatch],
+				alertcount: alertcount,
+				detail:     match[detailMatch],
+				latest:     scanner.Text(),
+			}
+
 		}
 	}
 
 	for k, a := range aiMetrics {
 		if strings.Contains(k, "alert") {
-			ch <- prometheus.MustNewConstMetric(m.Desc, m.Type, a.duration, a.camera, "alert", a.object, a.percent)
+			ch <- prometheus.MustNewConstMetric(m.Desc, m.Type, a.duration, a.camera, "alert", a.object, a.detail)
 		} else if strings.Contains(k, "cancelled") {
-			ch <- prometheus.MustNewConstMetric(m.Desc, m.Type, a.duration, a.camera, "cancelled", a.object, a.percent)
+			ch <- prometheus.MustNewConstMetric(m.Desc, m.Type, a.duration, a.camera, "cancelled", a.object, a.detail)
 		}
 	}
 
@@ -143,19 +128,24 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 			for k, a := range aiMetrics {
 				if strings.Contains(k, "alert") {
 					if a.latest != latestai[a.camera+"alert"] {
-						ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.duration, a.camera, "alert", a.object, a.percent)
+						ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.duration, a.camera, "alert", a.object, a.detail)
 						latestai[a.camera+"alert"] = a.latest
 					}
 				} else if strings.Contains(k, "cancelled") {
 					if a.latest != latestai[a.camera+"cancelled"] {
-						ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.duration, a.camera, "cancelled", a.object, a.percent)
+						ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.duration, a.camera, "cancelled", a.object, a.detail)
 						latestai[a.camera+"cancelled"] = a.latest
 					}
 				}
 			}
-
 		case "ai_restarted":
 			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, restartCount)
+		case "ai_timeout":
+			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, timeoutcount)
+		case "ai_servererror":
+			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, servererrorcount)
+		case "ai_notresponding":
+			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, notrespondingcount)
 		case "logerror":
 			if len(errorMetrics) == 0 {
 				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, 0, "")
@@ -175,28 +165,37 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 }
 
 func findObject(line string) (match []string, r *regexp.Regexp, matchType string) {
-	if strings.HasSuffix(line, "AI: timeout") {
-		return nil, nil, ""
-	} else if strings.Contains(line, "DeepStack: Server error") {
-		return nil, nil, ""
-	} else if strings.Contains(line, "AI:") {
-		r := regexp.MustCompile(`^.+(AM|PM)\s*(?P<camera>[^\s\\]*)(\s*AI:\s)(Alert|\[Objects\])\s(?P<object>[aA-zZ]*|cancelled)(:|\s)(?P<percent>[0-9]*)(%\s\[|\[)(?P<reason>.+).+\s(?P<duration>[0-9]*)ms`)
-		match := r.FindStringSubmatch(line)
-		if len(match) == 0 {
-			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
-			return nil, nil, ""
-		} else {
-			return match, r, "ai"
-		}
 
-	} else if strings.Contains(line, "DeepStack:") {
-		r := regexp.MustCompile(`^.+(AM|PM)\s*(?P<camera>[^\s\\]*)(\s*DeepStack:\s)(?P<object>Alert\scancelled|[aA-zZ]*)(:|\s)(?P<percent>[0-9]*)(%\s\[|\[)(?P<reason>.+).+\s(?P<duration>[0-9]*)ms`)
-		match := r.FindStringSubmatch(line)
+	if strings.HasSuffix(line, "AI: timeout") {
+		timeoutcount++
+		return nil, nil, ""
+
+	} else if strings.Contains(line, "AI has been restarted") {
+		restartCount++
+		return nil, nil, ""
+
+	} else if strings.Contains(line, "DeepStack: Server error") {
+		servererrorcount++
+		return nil, nil, ""
+
+	} else if strings.HasSuffix(line, "AI: not responding") {
+		notrespondingcount++
+		return nil, nil, ""
+
+	} else if strings.Contains(line, "AI:") || strings.Contains(line, "DeepStack:") {
+		newLine := strings.Join(strings.Fields(line), " ")
+		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|)(?P<object>[aA-zZ]*|cancelled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)(%|\])(\s)(\[.+\]\s|)(?P<duration>[0-9]*)ms`)
+		match := r.FindStringSubmatch(newLine)
+
 		if len(match) == 0 {
-			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
+			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", newLine), "console")
 			return nil, nil, ""
 		} else {
-			return match, r, "deepstack"
+			if strings.Contains(newLine, "cancelled") {
+				return match, r, "cancelled"
+			} else {
+				return match, r, "alert"
+			}
 		}
 
 	} else if strings.HasPrefix(line, "2") {
@@ -206,7 +205,18 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
 			return nil, nil, ""
 		} else {
-			return match, r, "error"
+			ErrorMatch := r.SubexpIndex("error")
+			e := match[ErrorMatch]
+			errorMetricsTotal++
+			if val, ok := errorMetrics[e]; ok {
+				val++
+				errorMetrics[e] = val
+			} else {
+				errorMetrics[e] = 1
+			}
+			return nil, nil, ""
+			// return match, r, "error"
+
 		}
 	}
 	return nil, nil, ""

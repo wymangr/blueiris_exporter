@@ -2,6 +2,8 @@
 Prometheus exporter for Blue Iris.
 Confirmed working on Blue Iris version's 5.5.0.12 and 5.6.2.8
 
+If you receive a `Unable to parse log line` error, please send me the details and I will work on adding support for it. Blue Iris has changed it's log format for AI a few times and I'm working on adding support for all of it. Also, if you have any ideas for different metrics, let me know! 
+
 ## Flags
 
 Flag     | Description | Default value | Required
@@ -131,6 +133,9 @@ Name     | Description |
 ai_duration | Duration (ms) of the last Blue Iris alert for each camera. This metric will continue to expose the last duration each time it's scraped
 ai_duration_distinct | Duration (ms) of the last Blue Iris alert for each camera. This metric will only show new alerts and will disapear the next scrpe
 ai_count | Count of the number of times IA analyzed and image
-ai_restarted | Number of times Blue Iris restarted the AI (deepstack)
-logerror | Count of unique errors in the logs
+ai_restarted | Number of times Blue Iris restarted the AI in the current logfile
+ai_timeout | Number of AI timeouts in the current logfile
+ai_servererror | Count of AI server not responding errors in the current logfile
+ai_notresponding | Count of AI not responding errors in the current logfile
+logerror | Count of unique errors in the current logfile
 logerror_total | Count of total errors in the logs
