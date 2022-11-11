@@ -184,7 +184,7 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 
 	} else if strings.Contains(line, "AI:") || strings.Contains(line, "DeepStack:") {
 		newLine := strings.Join(strings.Fields(line), " ")
-		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)(%|\])(\s)(\[.+\]\s|)(?P<duration>[0-9]*)ms`)
+		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)(%|\])(\s)(\[.+\]\s|)(?P<duration>[0-9]*)ms`)
 		match := r.FindStringSubmatch(newLine)
 
 		if len(match) == 0 {
