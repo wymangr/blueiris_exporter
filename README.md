@@ -139,3 +139,4 @@ ai_servererror | Count of AI server not responding errors in the current logfile
 ai_notresponding | Count of AI not responding errors in the current logfile
 logerror | Count of unique errors in the current logfile
 logerror_total | Count of total errors in the logs
+camera_status | Status of each camera. 0=up, 1=down

@@ -24,6 +24,7 @@ type aidata struct {
 }
 
 var latestai = make(map[string]string)
+var camerastatus = make(map[string]float64)
 
 var (
 	timeoutcount       float64
@@ -94,6 +95,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 			alertcount := aiMetrics[camera+matchType].alertcount
 			alertcount++
 
+			camerastatus[camera] = 0
 			aiMetrics[camera+matchType] = aidata{
 				camera:     camera,
 				duration:   duration,
@@ -156,6 +158,10 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 			}
 		case "logerror_total":
 			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, errorMetricsTotal)
+		case "camera_status":
+			for k, a := range camerastatus {
+				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a, k)
+			}
 		}
 	}
 
@@ -168,19 +174,15 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 
 	if strings.HasSuffix(line, "AI: timeout") {
 		timeoutcount++
-		return nil, nil, ""
 
 	} else if strings.Contains(line, "AI has been restarted") {
 		restartCount++
-		return nil, nil, ""
 
 	} else if strings.Contains(line, "DeepStack: Server error") {
 		servererrorcount++
-		return nil, nil, ""
 
 	} else if strings.HasSuffix(line, "AI: not responding") {
 		notrespondingcount++
-		return nil, nil, ""
 
 	} else if strings.Contains(line, "AI:") || strings.Contains(line, "DeepStack:") {
 		newLine := strings.Join(strings.Fields(line), " ")
@@ -214,9 +216,23 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			} else {
 				errorMetrics[e] = 1
 			}
-			return nil, nil, ""
-			// return match, r, "error"
 
+		}
+	} else if strings.Contains(line, "Signal:") {
+		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*Signal:\s)(?P<status>.+)`)
+		match := r.FindStringSubmatch(line)
+		cameraMatch := r.SubexpIndex("camera")
+		statusMatch := r.SubexpIndex("status")
+
+		camera := match[cameraMatch]
+		status := match[statusMatch]
+
+		if strings.Contains(status, "Failed") || strings.Contains(status, "network retry") || strings.Contains(status, "error") {
+			camerastatus[camera] = 1
+		} else if strings.Contains(status, "restored") {
+			camerastatus[camera] = 0
+		} else {
+			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
 		}
 	}
 	return nil, nil, ""
