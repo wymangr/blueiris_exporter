@@ -24,7 +24,7 @@ type aidata struct {
 }
 
 var latestai = make(map[string]string)
-var camerastatus = make(map[string]float64)
+var camerastatus = make(map[string]map[string]interface{})
 
 var (
 	timeoutcount       float64
@@ -95,7 +95,9 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 			alertcount := aiMetrics[camera+matchType].alertcount
 			alertcount++
 
-			camerastatus[camera] = 0
+			makeStatusMap(camera)
+			camerastatus[camera]["status"] = 0.0
+			camerastatus[camera]["detail"] = "restored"
 			aiMetrics[camera+matchType] = aidata{
 				camera:     camera,
 				duration:   duration,
@@ -159,8 +161,21 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 		case "logerror_total":
 			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, errorMetricsTotal)
 		case "camera_status":
+			status := 1.0
 			for k, a := range camerastatus {
-				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a, k)
+
+				switch i := a["status"].(type) {
+				case float64:
+					status = float64(i)
+					detail, ok := a["detail"].(string)
+					if !ok {
+						common.BIlogger(fmt.Sprintf("Invalid type for camera_status detail: \n%v", ok), "error")
+					}
+					ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, status, k, detail)
+
+				default:
+					common.BIlogger(fmt.Sprintf("Invalid type for camera_status status: \n%v", i), "error")
+				}
 			}
 		}
 	}
@@ -168,6 +183,12 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues("BlueIris").Desc(), prometheus.CounterValue, 0, "BlueIris")
 	ch <- prometheus.MustNewConstMetric(m.Timer, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "BlueIris")
 
+}
+
+func makeStatusMap(camera string) {
+	if _, ok := camerastatus[camera]; !ok {
+		camerastatus[camera] = make(map[string]interface{})
+	}
 }
 
 func findObject(line string) (match []string, r *regexp.Regexp, matchType string) {
@@ -221,18 +242,25 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 	} else if strings.Contains(line, "Signal:") {
 		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*Signal:\s)(?P<status>.+)`)
 		match := r.FindStringSubmatch(line)
-		cameraMatch := r.SubexpIndex("camera")
-		statusMatch := r.SubexpIndex("status")
-
-		camera := match[cameraMatch]
-		status := match[statusMatch]
-
-		if strings.Contains(status, "Failed") || strings.Contains(status, "network retry") || strings.Contains(status, "error") {
-			camerastatus[camera] = 1
-		} else if strings.Contains(status, "restored") {
-			camerastatus[camera] = 0
-		} else {
+		if len(match) == 0 {
 			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
+		} else {
+			cameraMatch := r.SubexpIndex("camera")
+			statusMatch := r.SubexpIndex("status")
+
+			camera := match[cameraMatch]
+			status := match[statusMatch]
+
+			makeStatusMap(camera)
+
+			if strings.Contains(status, "restored") {
+				camerastatus[camera]["status"] = 0.0
+			} else if strings.HasPrefix(line, "4") {
+				camerastatus[camera]["status"] = 0.0
+			} else {
+				camerastatus[camera]["status"] = 1.0
+			}
+			camerastatus[camera]["detail"] = status
 		}
 	}
 	return nil, nil, ""

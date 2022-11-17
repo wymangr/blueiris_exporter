@@ -30,7 +30,7 @@ var (
 		7:  newMetric("ai_notresponding", "Count of AI not responding errors in current logfile", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		8:  newMetric("logerror", "Count of unique errors in the logs", prometheus.GaugeValue, []string{"error"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		9:  newMetric("logerror_total", "Count all errors in the logs", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
-		10: newMetric("camera_status", "Status of each camera. 0=up, 1=down", prometheus.GaugeValue, []string{"camera"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
+		10: newMetric("camera_status", "Status of each camera. 0=up, 1=down", prometheus.GaugeValue, []string{"camera", "detail"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 	}
 
 	scrapeDurationDesc = prometheus.NewDesc(

@@ -625,7 +625,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "blueiris_camera_status",
+          "expr": "blueiris_camera_status{detail!=\"\"}",
           "legendFormat": "{{camera}}",
           "range": true,
           "refId": "A"
@@ -1240,6 +1240,6 @@
   "timezone": "",
   "title": "BlueIris",
   "uid": "NePvW0NVz",
-  "version": 51,
+  "version": 52,
   "weekStart": ""
 }
