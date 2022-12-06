@@ -140,3 +140,14 @@ ai_notresponding | Count of AI not responding errors in the current logfile
 logerror | Count of unique errors in the current logfile
 logerror_total | Count of total errors in the logs
 camera_status | Status of each camera. 0=up, 1=down
+triggers | Count of camera triggers
+push_notifications | Count of push notifications sent
+logwarning | Count of unique warnings in the current logfile
+logwarning_total | Count all warnings in the current logfile
+folder_disk_free | Free space of the disk the folder is using in bytes
+folder_used | Size percentage of the limit a folder is using
+hours_used | Hour percentage of the limit a folder is using
+
+
+## Grafana Dashboard
+https://grafana.com/grafana/dashboards/17432-blueiris/
