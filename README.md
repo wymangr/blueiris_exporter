@@ -1,8 +1,11 @@
 # blueiris_exporter
 Prometheus exporter for Blue Iris.
-Confirmed working on Blue Iris version's 5.5.0.12 and 5.6.2.8
+Confirmed working on Blue Iris version's 5.5.0.12 to 5.7.9.12
 
-If you receive a `Unable to parse log line` error, please send me the details and I will work on adding support for it. Blue Iris has changed it's log format for AI a few times and I'm working on adding support for all of it. Also, if you have any ideas for different metrics, let me know! 
+If you increment `parse_errors` metrics, please send me the details and I will work on adding support for it. Blue Iris has changed it's log format for AI a few times and I'm working on adding support for all of it. Also, if you have any ideas for different metrics, let me know! 
+
+## Todo
+Tests
 
 ## Flags
 
@@ -137,6 +140,8 @@ ai_restarted | Number of times Blue Iris restarted the AI in the current logfile
 ai_timeout | Number of AI timeouts in the current logfile
 ai_servererror | Count of AI server not responding errors in the current logfile
 ai_notresponding | Count of AI not responding errors in the current logfile
+ai_starting | Count of AI is being started log lines
+ai_started | Count of AI has been started log lines
 logerror | Count of unique errors in the current logfile
 logerror_total | Count of total errors in the logs
 camera_status | Status of each camera. 0=up, 1=down
@@ -147,7 +152,10 @@ logwarning_total | Count all warnings in the current logfile
 folder_disk_free | Free space of the disk the folder is using in bytes
 folder_used | Size percentage of the limit a folder is using
 hours_used | Hour percentage of the limit a folder is using
+parse_errors | Lines in the Blue Iris log that this exporter was unable to parse. Open an issue to add support
+parse_errors_total | Total number of lines in the Blue Iris log that this exporter was unable to parse
 
 
 ## Grafana Dashboard
 https://grafana.com/grafana/dashboards/17432-blueiris/
+![Grafana Dashboard](images/grafana-dashboard.png)

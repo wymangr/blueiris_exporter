@@ -103,7 +103,7 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 2,
+        "w": 3,
         "x": 0,
         "y": 0
       },
@@ -136,7 +136,143 @@
           "refId": "A"
         }
       ],
-      "title": "DeepStack Restarts",
+      "title": "AI Restarts",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 0
+      },
+      "id": 50,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "increase(blueiris_ai_starting [$__range])",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "AI Starting",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 6,
+        "y": 0
+      },
+      "id": 51,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "increase(blueiris_ai_started  [$__range])",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "AI Started",
       "type": "stat"
     },
     {
@@ -173,8 +309,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 2,
-        "x": 2,
+        "w": 3,
+        "x": 9,
         "y": 0
       },
       "id": 14,
@@ -243,8 +379,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 2,
-        "x": 4,
+        "w": 3,
+        "x": 12,
         "y": 0
       },
       "id": 21,
@@ -314,8 +450,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 2,
-        "x": 6,
+        "w": 3,
+        "x": 15,
         "y": 0
       },
       "id": 22,
@@ -387,7 +523,7 @@
       "gridPos": {
         "h": 3,
         "w": 2,
-        "x": 8,
+        "x": 18,
         "y": 0
       },
       "id": 18,
@@ -456,7 +592,7 @@
       "gridPos": {
         "h": 3,
         "w": 2,
-        "x": 10,
+        "x": 20,
         "y": 0
       },
       "id": 16,
@@ -489,6 +625,73 @@
         }
       ],
       "title": "Exporter Errors",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 2,
+        "x": 22,
+        "y": 0
+      },
+      "id": 49,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum(blueiris_parse_errors_total)",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Log Parse Errors",
       "type": "stat"
     },
     {
@@ -534,9 +737,9 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 12,
-        "x": 12,
-        "y": 0
+        "w": 24,
+        "x": 0,
+        "y": 3
       },
       "id": 26,
       "options": {
@@ -578,7 +781,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "id": 28,
       "panels": [],
@@ -615,7 +818,7 @@
         "h": 4,
         "w": 12,
         "x": 0,
-        "y": 4
+        "y": 7
       },
       "id": 24,
       "options": {
@@ -771,7 +974,7 @@
         "h": 14,
         "w": 12,
         "x": 12,
-        "y": 4
+        "y": 7
       },
       "id": 12,
       "interval": "15s",
@@ -941,7 +1144,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 11
       },
       "id": 17,
       "interval": "15s",
@@ -1043,7 +1246,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 21
       },
       "id": 10,
       "options": {
@@ -1079,12 +1282,128 @@
       "type": "timeseries"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 55,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "blueiris_ai_starting",
+          "legendFormat": "BlueIris AI Starting",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "blueiris_ai_started",
+          "hide": false,
+          "legendFormat": "BlueIris AI Started",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "blueiris_ai_restarted",
+          "hide": false,
+          "legendFormat": "BlueIris AI Restarted",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "AI Start/Restarts",
+      "type": "timeseries"
+    },
+    {
       "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 28
+        "y": 38
       },
       "id": 37,
       "panels": [
@@ -1116,7 +1435,7 @@
             "h": 3,
             "w": 12,
             "x": 0,
-            "y": 29
+            "y": 40
           },
           "id": 41,
           "options": {
@@ -1177,7 +1496,7 @@
             "h": 3,
             "w": 12,
             "x": 12,
-            "y": 29
+            "y": 40
           },
           "id": 42,
           "options": {
@@ -1266,38 +1585,13 @@
                 ]
               }
             },
-            "overrides": [
-              {
-                "__systemRef": "hideSeriesFrom",
-                "matcher": {
-                  "id": "byNames",
-                  "options": {
-                    "mode": "exclude",
-                    "names": [
-                      "DW"
-                    ],
-                    "prefix": "All except:",
-                    "readOnly": true
-                  }
-                },
-                "properties": [
-                  {
-                    "id": "custom.hideFrom",
-                    "value": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": true
-                    }
-                  }
-                ]
-              }
-            ]
+            "overrides": []
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 32
+            "y": 43
           },
           "id": 39,
           "options": {
@@ -1393,7 +1687,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 32
+            "y": 43
           },
           "id": 40,
           "options": {
@@ -1438,7 +1732,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 29
+        "y": 39
       },
       "id": 44,
       "panels": [
@@ -1506,7 +1800,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 30
+            "y": 41
           },
           "id": 46,
           "options": {
@@ -1603,7 +1897,7 @@
             "h": 8,
             "w": 7,
             "x": 8,
-            "y": 30
+            "y": 41
           },
           "id": 47,
           "options": {
@@ -1702,7 +1996,7 @@
             "h": 8,
             "w": 9,
             "x": 15,
-            "y": 30
+            "y": 41
           },
           "id": 48,
           "options": {
@@ -1747,7 +2041,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 40
       },
       "id": 30,
       "panels": [],
@@ -1816,7 +2110,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 31
+        "y": 41
       },
       "id": 35,
       "options": {
@@ -1869,113 +2163,6 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 31
-      },
-      "id": 34,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true,
-          "width": 300
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "increase(blueiris_logwarning_total[5m])",
-          "legendFormat": "Total",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (warning) (increase(blueiris_logwarning{warning!=\"\"}[5m]))",
-          "hide": false,
-          "legendFormat": "{{warning}}",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Log Warnings",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
             "mode": "thresholds"
           },
           "custom": {
@@ -2014,10 +2201,10 @@
         ]
       },
       "gridPos": {
-        "h": 10,
+        "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 39
+        "x": 12,
+        "y": 41
       },
       "id": 20,
       "options": {
@@ -2029,7 +2216,12 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": []
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Count"
+          }
+        ]
       },
       "pluginVersion": "9.3.0",
       "targets": [
@@ -2090,6 +2282,113 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisWidth": 3,
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 49
+      },
+      "id": 52,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "increase(blueiris_logerror_total[5m])",
+          "legendFormat": "Total",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (error) (increase(blueiris_logerror_total{error!=\"\"}[5m]))",
+          "hide": false,
+          "legendFormat": "{{error}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Log Errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
             "mode": "thresholds"
           },
           "custom": {
@@ -2128,10 +2427,10 @@
         ]
       },
       "gridPos": {
-        "h": 10,
+        "h": 8,
         "w": 12,
         "x": 12,
-        "y": 39
+        "y": 49
       },
       "id": 31,
       "options": {
@@ -2143,7 +2442,12 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": []
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Count"
+          }
+        ]
       },
       "pluginVersion": "9.3.0",
       "targets": [
@@ -2199,6 +2503,242 @@
         }
       ],
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "blueiris_exporter was unable to parse one of the lines in the blue iris log file. Open an issue on https://github.com/wymangr/blueiris_exporter",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 57
+      },
+      "id": 34,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "width": 300
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "increase(blueiris_parse_errors_total[5m])",
+          "legendFormat": "Total",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (line) (increase(blueiris_parse_errors{line!=\"\"}[5m]))",
+          "hide": false,
+          "legendFormat": "{{line}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Parse Errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "blueiris_exporter was unable to parse one of the lines in the blue iris log file. Open an issue on https://github.com/wymangr/blueiris_exporter",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 57
+      },
+      "id": 53,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Count"
+          }
+        ]
+      },
+      "pluginVersion": "9.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (line) (blueiris_parse_errors{line!=\"\"})",
+          "format": "table",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Parse Errors",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Time": {
+                "aggregations": []
+              },
+              "Value": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "error": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "line": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "warning": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "Time": "",
+              "Value (lastNotNull)": "Count"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "refresh": "10s",
@@ -2224,7 +2764,7 @@
           "query": "label_values(blueiris_camera_status, camera)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -2236,7 +2776,7 @@
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "definition": "label_values(gw_blue_iris_ai_duration, type)",
+        "definition": "label_values(blueiris_ai_duration, type)",
         "hide": 0,
         "includeAll": true,
         "label": "Type",
@@ -2244,10 +2784,10 @@
         "name": "type",
         "options": [],
         "query": {
-          "query": "label_values(gw_blue_iris_ai_duration, type)",
+          "query": "label_values(blueiris_ai_duration, type)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -2263,6 +2803,6 @@
   "timezone": "",
   "title": "BlueIris",
   "uid": "NePvW0NVz",
-  "version": 57,
+  "version": 63,
   "weekStart": ""
 }

@@ -36,11 +36,15 @@ var (
 	notrespondingcount  float64
 	errorMetricsTotal   float64
 	warningMetricsTotal float64
+	parseErrorsTotal    float64
 	restartCount        float64
+	aiRestartingCount   float64
+	aiRestartedCount    float64
 	triggerCount        map[string]float64
 	pushCount           map[string]float64
 	errorMetrics        map[string]float64
 	warningMetrics      map[string]float64
+	parseErrors         map[string]float64
 )
 
 func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string) {
@@ -53,10 +57,14 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	pushCount = make(map[string]float64)
 	errorMetricsTotal = 0
 	warningMetricsTotal = 0
+	parseErrorsTotal = 0
 	restartCount = 0
+	aiRestartingCount = 0
+	aiRestartedCount = 0
 	timeoutcount = 0
 	servererrorcount = 0
 	notrespondingcount = 0
+	parseErrors = make(map[string]float64)
 
 	dir := logpath
 	files, err := ioutil.ReadDir(dir)
@@ -154,6 +162,10 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 					}
 				}
 			}
+		case "ai_starting":
+			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, aiRestartingCount)
+		case "ai_started":
+			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, aiRestartedCount)
 		case "ai_restarted":
 			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, restartCount)
 		case "ai_timeout":
@@ -188,6 +200,16 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, v, camera, status, detail)
 			}
 
+		case "parse_errors":
+			if len(parseErrors) == 0 {
+				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, 0, "")
+			} else {
+				for parse_line, va := range parseErrors {
+					ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, va, parse_line)
+				}
+			}
+		case "parse_errors_total":
+			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, parseErrorsTotal)
 		case "logerror":
 			if len(errorMetrics) == 0 {
 				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, 0, "")
@@ -280,6 +302,12 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 	} else if strings.Contains(line, "AI has been restarted") {
 		restartCount++
 
+	} else if strings.Contains(line, "AI: is being started") {
+		aiRestartingCount++
+
+	} else if strings.Contains(line, "AI: has been started") {
+		aiRestartedCount++
+
 	} else if strings.Contains(line, "DeepStack: Server error") {
 		servererrorcount++
 
@@ -290,7 +318,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*(?P<motion>EXTERNAL|MOTION|DIO))`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
-			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
+			parseErrors = appendCounterMap(parseErrors, line)
+			parseErrorsTotal++
 		} else {
 			cameraMatch := r.SubexpIndex("camera")
 			camera := match[cameraMatch]
@@ -304,7 +333,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*Push:\s)(?P<status>.+)(\sto\s)(?P<detail>.+)`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
-			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
+			parseErrors = appendCounterMap(parseErrors, line)
+			parseErrorsTotal++
 		} else {
 			cameraMatch := r.SubexpIndex("camera")
 			statusMatch := r.SubexpIndex("status")
@@ -322,7 +352,12 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		match := r.FindStringSubmatch(newLine)
 
 		if len(match) == 0 {
-			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", newLine), "console")
+			r2 := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)`)
+			match2 := r2.FindStringSubmatch(newLine)
+			if len(match2) == 0 {
+				parseErrors = appendCounterMap(parseErrors, line)
+				parseErrorsTotal++
+			}
 			return nil, nil, ""
 		} else {
 			if strings.Contains(newLine, "cancelled") {
@@ -336,7 +371,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*Signal:\s)(?P<status>.+)`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
-			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
+			parseErrors = appendCounterMap(parseErrors, line)
+			parseErrorsTotal++
 		} else {
 			cameraMatch := r.SubexpIndex("camera")
 			statusMatch := r.SubexpIndex("status")
@@ -362,7 +398,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			r1 := regexp.MustCompile(`(?P<folder>[^\s\\]*)(\s*Delete:).+(\[((?P<sizeused>.+)\/(?P<sizelimit>.+)),\s(?P<diskfree>.+)\sfree\])`)
 			match1 := r1.FindStringSubmatch(line)
 			if len(match1) == 0 {
-				common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
+				parseErrors = appendCounterMap(parseErrors, line)
+				parseErrorsTotal++
 				return nil, nil, ""
 			}
 			folderMatch1 := r1.SubexpIndex("folder")
@@ -447,7 +484,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		r := regexp.MustCompile(`.*\s\s\s(?P<error>.*)`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
-			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
+			parseErrors = appendCounterMap(parseErrors, line)
+			parseErrorsTotal++
 			return nil, nil, ""
 		} else {
 			ErrorMatch := r.SubexpIndex("error")
@@ -465,7 +503,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		r := regexp.MustCompile(`.*\s\s\s(?P<warning>.*)`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
-			common.BIlogger(fmt.Sprintf("Unable to parse log line: \n%v", line), "console")
+			parseErrors = appendCounterMap(parseErrors, line)
+			parseErrorsTotal++
 			return nil, nil, ""
 		} else {
 			WarningMatch := r.SubexpIndex("warning")
@@ -480,4 +519,14 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		}
 	}
 	return nil, nil, ""
+}
+
+func appendCounterMap(m map[string]float64, key string) map[string]float64 {
+	if val, ok := m[key]; ok {
+		val++
+		m[key] = val
+	} else {
+		m[key] = 1
+	}
+	return m
 }

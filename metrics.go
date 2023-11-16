@@ -21,7 +21,7 @@ var (
 	namespace string = "blueiris"
 
 	blueIrisServerMetrics = metrics{
-		1:  newMetric("ai_duration", "Duration of Blue Iris AI analysis", prometheus.GaugeValue, []string{"camera", "type", "object", "detail"}, blueiris.BlueIris, CollectBool{true: []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}}, "blueIrisServerMetrics"),
+		1:  newMetric("ai_duration", "Duration of Blue Iris AI analysis", prometheus.GaugeValue, []string{"camera", "type", "object", "detail"}, blueiris.BlueIris, CollectBool{true: []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}}, "blueIrisServerMetrics"),
 		2:  newMetric("ai_count", "Count of Blue Iris AI analysis", prometheus.GaugeValue, []string{"camera", "type"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		3:  newMetric("ai_duration_distinct", "Duration of Blue Iris AI analysis once", prometheus.GaugeValue, []string{"camera", "type", "object", "detail"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		4:  newMetric("ai_restarted", "Times BlueIris restarted Deepstack", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
@@ -38,6 +38,10 @@ var (
 		15: newMetric("folder_disk_free", "Free space of the disk the folder is using in bytes", prometheus.GaugeValue, []string{"folder"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		16: newMetric("folder_used", "Percentage of folder bytes used based on limit", prometheus.GaugeValue, []string{"folder"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		17: newMetric("hours_used", "Percentage of folder hours used based on limit", prometheus.GaugeValue, []string{"folder"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
+		18: newMetric("parse_errors", "Count of unique errors parsing log lines", prometheus.GaugeValue, []string{"line"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
+		19: newMetric("parse_errors_total", "Count of all the errors parsing log lines", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
+		20: newMetric("ai_starting", "Count of AI is being started log lines", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
+		21: newMetric("ai_started", "Count of AI has been started log lines", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 	}
 
 	scrapeDurationDesc = prometheus.NewDesc(
