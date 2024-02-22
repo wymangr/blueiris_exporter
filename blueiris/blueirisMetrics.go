@@ -45,6 +45,7 @@ var (
 	errorMetrics        map[string]float64
 	warningMetrics      map[string]float64
 	parseErrors         map[string]float64
+	profileCount		map[string]float64
 )
 
 func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string) {
@@ -55,6 +56,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	warningMetrics = make(map[string]float64)
 	triggerCount = make(map[string]float64)
 	pushCount = make(map[string]float64)
+	profileCount = make(map[string]float64)
 	errorMetricsTotal = 0
 	warningMetricsTotal = 0
 	parseErrorsTotal = 0
@@ -199,7 +201,10 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 				detail := details[2]
 				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, v, camera, status, detail)
 			}
-
+		case "profile":
+			for f, v := range profileCount {
+				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, v, f)
+			}
 		case "parse_errors":
 			if len(parseErrors) == 0 {
 				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, 0, "")
@@ -391,6 +396,20 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 				camerastatus[camera]["status"] = 1.0
 			}
 			camerastatus[camera]["detail"] = status
+		}
+	} else if strings.Contains(line, "Current profile:") {
+		r := regexp.MustCompile(`(App)(\s*Current profile:\s)(?P<profile>.+)`)
+		match := r.FindStringSubmatch(line)
+		if len(match) == 0 {
+			parseErrors = appendCounterMap(parseErrors, line)
+			parseErrorsTotal++
+		} else {
+			profileMatch := r.SubexpIndex("profile")
+			profile := match[profileMatch]
+			for f, _ := range profileCount {
+				profileCount[f] = 0
+			}
+			profileCount[profile] = 1
 		}
 	} else if strings.Contains(line, "Delete: ") && strings.HasPrefix(line, "0 ") {
 		r := regexp.MustCompile(`(?P<folder>[^\s\\]*)(\s*Delete:).+(\[(((?P<hoursused>[0-9]*)\/(?P<hourstotal>[0-9]*))\shrs,(\s(?P<sizeused>[\d\.]+)(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree)\])`)
