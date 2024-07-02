@@ -21,7 +21,7 @@ var (
 	namespace string = "blueiris"
 
 	blueIrisServerMetrics = metrics{
-		1:  newMetric("ai_duration", "Duration of Blue Iris AI analysis", prometheus.GaugeValue, []string{"camera", "type", "object", "detail"}, blueiris.BlueIris, CollectBool{true: []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}}, "blueIrisServerMetrics"),
+		1:  newMetric("ai_duration", "Duration of Blue Iris AI analysis", prometheus.GaugeValue, []string{"camera", "type", "object", "detail"}, blueiris.BlueIris, CollectBool{true: []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}}, "blueIrisServerMetrics"),
 		2:  newMetric("ai_count", "Count of Blue Iris AI analysis", prometheus.GaugeValue, []string{"camera", "type"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		3:  newMetric("ai_duration_distinct", "Duration of Blue Iris AI analysis once", prometheus.GaugeValue, []string{"camera", "type", "object", "detail"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		4:  newMetric("ai_restarted", "Times BlueIris restarted Deepstack", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
@@ -43,6 +43,7 @@ var (
 		20: newMetric("ai_starting", "Count of AI is being started log lines", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		21: newMetric("ai_started", "Count of AI has been started log lines", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 		22: newMetric("profile", "Count of activation of profiles", prometheus.GaugeValue, []string{"profile"}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
+		23: newMetric("ai_error", "Count of AI error log lines", prometheus.GaugeValue, []string{}, blueiris.BlueIris, CollectBool{false: nil}, "blueIrisServerMetrics"),
 	}
 
 	scrapeDurationDesc = prometheus.NewDesc(

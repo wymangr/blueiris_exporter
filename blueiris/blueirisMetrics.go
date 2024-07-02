@@ -38,6 +38,7 @@ var (
 	warningMetricsTotal float64
 	parseErrorsTotal    float64
 	restartCount        float64
+	aiErrorCount        float64
 	aiRestartingCount   float64
 	aiRestartedCount    float64
 	triggerCount        map[string]float64
@@ -61,6 +62,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	warningMetricsTotal = 0
 	parseErrorsTotal = 0
 	restartCount = 0
+	aiErrorCount = 0
 	aiRestartingCount = 0
 	aiRestartedCount = 0
 	timeoutcount = 0
@@ -164,6 +166,8 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 					}
 				}
 			}
+		case "ai_error":
+			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, aiErrorCount)
 		case "ai_starting":
 			ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, aiRestartingCount)
 		case "ai_started":
@@ -308,10 +312,13 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 	} else if strings.Contains(line, "AI has been restarted") {
 		restartCount++
 
-	} else if strings.Contains(line, "AI: is being started") {
+	} else if strings.Contains(line, "AI: error") {
+		aiErrorCount++
+
+	} else if strings.Contains(line, "AI: is being started") || strings.Contains(line, "AI is being restarted") {
 		aiRestartingCount++
 
-	} else if strings.Contains(line, "AI: has been started") {
+	} else if strings.Contains(line, "AI: has been started") || strings.Contains(line, "AI has been started") {
 		aiRestartedCount++
 
 	} else if strings.Contains(line, "DeepStack: Server error") {
