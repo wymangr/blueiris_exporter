@@ -320,8 +320,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 	} else if strings.HasSuffix(line, "AI: not responding") {
 		notrespondingcount++
 
-	} else if strings.Contains(line, "EXTERNAL") || strings.Contains(line, "MOTION") || strings.Contains(line, "DIO") {
-		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*(?P<motion>EXTERNAL|MOTION|DIO))`)
+	} else if strings.Contains(line, "EXTERNAL") || strings.Contains(line, "MOTION") || strings.Contains(line, "DIO") || strings.Contains(line, "Triggered") || strings.Contains(line, "Re-triggered") {
+		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*(?P<motion>EXTERNAL|MOTION|DIO|Triggered|Re-triggered))`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
 			parseErrors = appendCounterMap(parseErrors, line)
