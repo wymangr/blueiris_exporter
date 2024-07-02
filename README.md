@@ -138,7 +138,7 @@ ai_duration_distinct | Duration (ms) of the last Blue Iris alert for each camera
 ai_count | Count of the number of times IA analyzed and image
 ai_restarted | Number of times Blue Iris restarted the AI in the current logfile
 ai_timeout | Number of AI timeouts in the current logfile
-ai_servererror | Count of AI server not responding errors in the current logfile
+ai_servererror | Count of Deepstack server not responding errors in the current logfile
 ai_notresponding | Count of AI not responding errors in the current logfile
 ai_starting | Count of AI is being started log lines
 ai_started | Count of AI has been started log lines
@@ -155,6 +155,7 @@ hours_used | Hour percentage of the limit a folder is using
 parse_errors | Lines in the Blue Iris log that this exporter was unable to parse. Open an issue to add support
 parse_errors_total | Total number of lines in the Blue Iris log that this exporter was unable to parse
 profile | Count of activation of profiles
+ai_error | Count of AI error log lines
 
 
 ## Grafana Dashboard
