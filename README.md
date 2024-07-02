@@ -1,6 +1,6 @@
 # blueiris_exporter
 Prometheus exporter for Blue Iris.
-Confirmed working on Blue Iris version's 5.5.0.12 to 5.7.9.12
+Confirmed working on Blue Iris version's 5.5.0.12 to 5.9.2.2
 
 If you increment `parse_errors` metrics, please send me the details and I will work on adding support for it. Blue Iris has changed it's log format for AI a few times and I'm working on adding support for all of it. Also, if you have any ideas for different metrics, let me know! 
 
@@ -154,6 +154,7 @@ folder_used | Size percentage of the limit a folder is using
 hours_used | Hour percentage of the limit a folder is using
 parse_errors | Lines in the Blue Iris log that this exporter was unable to parse. Open an issue to add support
 parse_errors_total | Total number of lines in the Blue Iris log that this exporter was unable to parse
+profile | Count of activation of profiles
 
 
 ## Grafana Dashboard

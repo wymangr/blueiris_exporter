@@ -31,6 +31,12 @@
     },
     {
       "type": "panel",
+      "id": "state-timeline",
+      "name": "State timeline",
+      "version": ""
+    },
+    {
+      "type": "panel",
       "id": "table",
       "name": "Table",
       "version": ""
@@ -1435,7 +1441,7 @@
             "h": 3,
             "w": 12,
             "x": 0,
-            "y": 40
+            "y": 55
           },
           "id": 41,
           "options": {
@@ -1496,7 +1502,7 @@
             "h": 3,
             "w": 12,
             "x": 12,
-            "y": 40
+            "y": 55
           },
           "id": 42,
           "options": {
@@ -1591,7 +1597,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 43
+            "y": 58
           },
           "id": 39,
           "options": {
@@ -1687,7 +1693,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 43
+            "y": 58
           },
           "id": 40,
           "options": {
@@ -1800,7 +1806,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 41
+            "y": 56
           },
           "id": 46,
           "options": {
@@ -1897,7 +1903,7 @@
             "h": 8,
             "w": 7,
             "x": 8,
-            "y": 41
+            "y": 56
           },
           "id": 47,
           "options": {
@@ -1996,7 +2002,7 @@
             "h": 8,
             "w": 9,
             "x": 15,
-            "y": 41
+            "y": 56
           },
           "id": 48,
           "options": {
@@ -2036,12 +2042,97 @@
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 40
+      },
+      "id": 57,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "fillOpacity": 70,
+                "lineWidth": 0,
+                "spanNulls": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 41
+          },
+          "id": 59,
+          "options": {
+            "alignValue": "left",
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "mergeValues": false,
+            "rowHeight": 0.9,
+            "showValue": "never",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.3.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "blueiris_profile",
+              "legendFormat": "{{profile}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Profiles",
+          "type": "state-timeline"
+        }
+      ],
+      "title": "Profiles",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 41
       },
       "id": 30,
       "panels": [],
@@ -2104,23 +2195,36 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 41
+        "y": 42
       },
       "id": 35,
       "options": {
         "legend": {
-          "calcs": [
-            "mean"
-          ],
+          "calcs": [],
           "displayMode": "table",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": true,
+          "sortBy": "Mean",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "single",
@@ -2145,7 +2249,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (error) (increase(blueiris_logerror_total{error!=\"\"}[5m]))",
+          "expr": "sum by (error) (blueiris_logerror{error!=\"\"})",
           "hide": false,
           "legendFormat": "{{error}}",
           "range": true,
@@ -2204,7 +2308,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 41
+        "y": 42
       },
       "id": 20,
       "options": {
@@ -2330,23 +2434,36 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 49
+        "y": 50
       },
       "id": 52,
       "options": {
         "legend": {
-          "calcs": [
-            "mean"
-          ],
+          "calcs": [],
           "displayMode": "table",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": true,
+          "sortBy": "Mean",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "single",
@@ -2360,7 +2477,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "increase(blueiris_logerror_total[5m])",
+          "expr": "increase(blueiris_logwarning_total[5m])",
           "legendFormat": "Total",
           "range": true,
           "refId": "A"
@@ -2371,14 +2488,14 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (error) (increase(blueiris_logerror_total{error!=\"\"}[5m]))",
+          "expr": "sum by (warning) (blueiris_logwarning{warning!=\"\"})",
           "hide": false,
           "legendFormat": "{{error}}",
           "range": true,
           "refId": "B"
         }
       ],
-      "title": "Log Errors",
+      "title": "Log Warnings",
       "type": "timeseries"
     },
     {
@@ -2430,7 +2547,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 49
+        "y": 50
       },
       "id": 31,
       "options": {
@@ -2560,23 +2677,36 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 57
+        "y": 58
       },
       "id": 34,
       "options": {
         "legend": {
-          "calcs": [
-            "mean"
-          ],
+          "calcs": [],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true,
+          "sortBy": "Mean",
+          "sortDesc": true,
           "width": 300
         },
         "tooltip": {
@@ -2602,7 +2732,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (line) (increase(blueiris_parse_errors{line!=\"\"}[5m]))",
+          "expr": "sum by (line) (blueiris_parse_errors{line!=\"\"})",
           "hide": false,
           "legendFormat": "{{line}}",
           "range": true,
@@ -2662,7 +2792,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 57
+        "y": 58
       },
       "id": 53,
       "options": {
@@ -2803,6 +2933,6 @@
   "timezone": "",
   "title": "BlueIris",
   "uid": "NePvW0NVz",
-  "version": 63,
+  "version": 68,
   "weekStart": ""
 }
