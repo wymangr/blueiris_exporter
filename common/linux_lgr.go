@@ -1,3 +1,4 @@
+//go:build LINUX
 // +build LINUX
 
 package common

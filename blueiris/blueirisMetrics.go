@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -49,7 +50,7 @@ var (
 	profileCount        map[string]float64
 )
 
-func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string) {
+func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string, logOffset int64) {
 
 	scrapeTime := time.Now()
 	aiMetrics := make(map[string]aidata)
@@ -98,9 +99,15 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 		return
 	}
 	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
 
+	offset := 0 - (logOffset * 1000000)
+	if offset != 0 {
+		file.Seek(offset, io.SeekEnd)
+	}
+	scanner := bufio.NewScanner(file)
+	scanner.Scan()
+
+	for scanner.Scan() {
 		match, r, matchType := findObject(scanner.Text())
 		if (matchType == "alert") || (matchType == "cancelled") {
 			cameraMatch := r.SubexpIndex("camera")
@@ -190,11 +197,11 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 			}
 		case "folder_used":
 			for f, v := range diskStats {
-				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, v["hourPercent"], f)
+				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, v["sizePercent"], f)
 			}
 		case "hours_used":
 			for f, v := range diskStats {
-				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, v["sizePercent"], f)
+				ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, v["hourPercent"], f)
 			}
 		case "push_notifications":
 
@@ -287,16 +294,16 @@ func convertBytes(s string, unit string) (f float64, err error) {
 		bytefl, errConv = convertStrFloat(s)
 	} else if strings.Compare(unit, "KB") == 0 || strings.Compare(unit, "K") == 0 {
 		convertedFloat, errConv = convertStrFloat(s)
-		bytefl = convertedFloat * 1024
+		bytefl = convertedFloat * 1000
 	} else if strings.Compare(unit, "MB") == 0 || strings.Compare(unit, "M") == 0 {
 		convertedFloat, errConv = convertStrFloat(s)
-		bytefl = convertedFloat * 1024 * 1024
+		bytefl = convertedFloat * 1000 * 1000
 	} else if strings.Compare(unit, "GB") == 0 || strings.Compare(unit, "G") == 0 {
 		convertedFloat, errConv = convertStrFloat(s)
-		bytefl = convertedFloat * 1024 * 1024 * 1024
+		bytefl = convertedFloat * 1000 * 1000 * 1000
 	} else if strings.Compare(unit, "TB") == 0 || strings.Compare(unit, "T") == 0 {
 		convertedFloat, errConv = convertStrFloat(s)
-		bytefl = convertedFloat * 1024 * 1024 * 1024 * 1024
+		bytefl = convertedFloat * 1000 * 1000 * 1000 * 1000
 	} else {
 		common.BIlogger(fmt.Sprintf("s %s , Unit %s", s, unit), "console")
 		errConv = errors.New("unable to determine sting type (B, K, M, G, T)")
@@ -413,20 +420,25 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 		} else {
 			profileMatch := r.SubexpIndex("profile")
 			profile := match[profileMatch]
-			for f, _ := range profileCount {
+			for f := range profileCount {
 				profileCount[f] = 0
 			}
 			profileCount[profile] = 1
 		}
 	} else if strings.Contains(line, "Delete: ") && strings.HasPrefix(line, "0 ") {
-		r := regexp.MustCompile(`(?P<folder>[^\s\\]*)(\s*Delete:).+(\[(((?P<hoursused>[0-9]*)\/(?P<hourstotal>[0-9]*))\shrs,(\s(?P<sizeused>[\d\.]+)(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree)\])`)
+		r := regexp.MustCompile(`[APM]{2}\s(?P<folder>.+?)\s+Delete.+(\s|\[)((((?P<hoursused>[0-9]*)\/(?P<hourstotal>[0-9]*))\shrs,(\s(?P<sizeused>[\d\.]+)(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree))`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
-			r1 := regexp.MustCompile(`(?P<folder>[^\s\\]*)(\s*Delete:).+\[(((?P<sizeused>[\d\.]+)(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree.+)`)
+			r1 := regexp.MustCompile(`[APM]{2}\s(?P<folder>.+?)\s+Delete.+((((\s|\s\[)(?P<sizeused>\d+|\d+\.\d))(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree)`)
 			match1 := r1.FindStringSubmatch(line)
 			if len(match1) == 0 {
-				parseErrors = appendCounterMap(parseErrors, line)
-				parseErrorsTotal++
+				r2 := regexp.MustCompile(`[APM]{2}\s(?P<folder>.+?)\s+(?P<ignore>Delete:\s\d+\sitems\s\d.+)`)
+				match2 := r2.FindStringSubmatch(line)
+				ignore := r2.SubexpIndex("ignore")
+				if strings.Compare(match2[ignore], "") == 0 {
+					parseErrors = appendCounterMap(parseErrors, line)
+					parseErrorsTotal++
+				}
 				return nil, nil, ""
 			}
 			folderMatch1 := r1.SubexpIndex("folder")
@@ -453,7 +465,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			if strings.Compare(match1[sizeunitMatch1], "") == 0 {
 				sizeused1, err := convertBytes(match1[sizeusedMatch1], match1[sizelimitunitMatch1])
 				if err != nil {
-					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused Error: \n%v", err), "console")
+					fmt.Println(line)
+					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused Match1/sizelimitunitMatch1 Error: \n%v", err), "console")
 					return nil, nil, ""
 				}
 				sizePercent1 := (sizeused1 / sizelimit1) * 100
@@ -465,7 +478,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			} else {
 				sizeused1, err := convertBytes(match1[sizeusedMatch1], match1[sizeunitMatch1])
 				if err != nil {
-					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused Error: \n%v", err), "console")
+					fmt.Println(line)
+					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch1/sizeunitMatch1 Error: \n%v", err), "console")
 					return nil, nil, ""
 				}
 				sizePercent1 := (sizeused1 / sizelimit1) * 100
@@ -514,7 +528,7 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			if strings.Compare(match[sizeunitMatch], "") == 0 {
 				sizeused, err := convertBytes(match[sizeusedMatch], match[sizelimitunitMatch])
 				if err != nil {
-					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused Error: \n%v", err), "console")
+					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch/sizelimitunitMatch Error: \n%v", err), "console")
 					return nil, nil, ""
 				}
 				sizePercent := (sizeused / sizelimit) * 100
@@ -529,7 +543,7 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			} else {
 				sizeused, err := convertBytes(match[sizeusedMatch], match[sizeunitMatch])
 				if err != nil {
-					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused Error: \n%v", err), "console")
+					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch/sizeunitMatch Error: \n%v", err), "console")
 					return nil, nil, ""
 				}
 				sizePercent := (sizeused / sizelimit) * 100

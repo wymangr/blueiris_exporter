@@ -15,6 +15,7 @@ type CollectBool map[bool][]int
 type ExporterBlueIris struct {
 	blueIrisServerMetrics map[int]common.MetricInfo
 	logpath               string
+	lofOffset             int64
 }
 
 var (
@@ -58,7 +59,7 @@ func newMetric(
 	docString string,
 	t prometheus.ValueType,
 	labels []string,
-	f func(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string),
+	f func(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string, logOffset int64),
 	collect CollectBool,
 	ServerMetrics string) common.MetricInfo {
 
@@ -98,18 +99,19 @@ func CollectMetrics(
 	m common.MetricInfo,
 	n string,
 	logpath string,
+	logOffset int64,
 ) {
 
 	defer wg.Done()
 
 	if m.SecondaryCollect == nil {
-		m.Function(ch, m, nil, logpath)
+		m.Function(ch, m, nil, logpath, logOffset)
 	} else {
 		var secMet []common.MetricInfo
 		secMet = nil
 		for _, i := range m.SecondaryCollect {
 			secMet = append(secMet, blueIrisServerMetrics[i])
 		}
-		m.Function(ch, m, secMet, logpath)
+		m.Function(ch, m, secMet, logpath, logOffset)
 	}
 }

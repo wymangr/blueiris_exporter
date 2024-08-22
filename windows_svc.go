@@ -1,3 +1,4 @@
+//go:build !LINUX
 // +build !LINUX
 
 package main
@@ -28,10 +29,11 @@ func (m *myservice) Execute(args []string, r <-chan svc.ChangeRequest, changes c
 	var a string = fmt.Sprintf(`starting Blue Iris Exporter with the following:
 		Log Path: %v
 		Metric Path: %v
-		Port: %v`, os.Args[1], os.Args[2], os.Args[3])
+		Port: %v
+		Log Offset: %v MB`, os.Args[1], os.Args[2], os.Args[3], os.Args[4])
 	common.BIlogger(a, "info")
 
-	go start(os.Args[1], os.Args[2], os.Args[3])
+	go start(os.Args[1], os.Args[2], os.Args[3], os.Args[4])
 loop:
 	for {
 		select {
@@ -106,7 +108,7 @@ func exePath() (string, error) {
 	return "", err
 }
 
-func installService(name, desc string, logpath string, metricsPath string, port string) error {
+func installService(name, desc string, logpath string, metricsPath string, port string, logOffset string) error {
 	exepath, err := exePath()
 	if err != nil {
 		return err
@@ -121,7 +123,7 @@ func installService(name, desc string, logpath string, metricsPath string, port 
 		s.Close()
 		return fmt.Errorf("service %s already exists", name)
 	}
-	s, err = m.CreateService(name, exepath, mgr.Config{DisplayName: desc}, logpath, metricsPath, port)
+	s, err = m.CreateService(name, exepath, mgr.Config{DisplayName: desc}, logpath, metricsPath, port, logOffset)
 	if err != nil {
 		return err
 	}
