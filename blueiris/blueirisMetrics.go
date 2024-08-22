@@ -109,7 +109,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 
 	for scanner.Scan() {
 		match, r, matchType := findObject(scanner.Text())
-		if (matchType == "alert") || (matchType == "cancelled") {
+		if (matchType == "alert") || (matchType == "canceled") {
 			cameraMatch := r.SubexpIndex("camera")
 			durationMatch := r.SubexpIndex("duration")
 			objectMatch := r.SubexpIndex("object")
@@ -144,8 +144,8 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	for k, a := range aiMetrics {
 		if strings.Contains(k, "alert") {
 			ch <- prometheus.MustNewConstMetric(m.Desc, m.Type, a.duration, a.camera, "alert", a.object, a.detail)
-		} else if strings.Contains(k, "cancelled") {
-			ch <- prometheus.MustNewConstMetric(m.Desc, m.Type, a.duration, a.camera, "cancelled", a.object, a.detail)
+		} else if strings.Contains(k, "canceled") {
+			ch <- prometheus.MustNewConstMetric(m.Desc, m.Type, a.duration, a.camera, "canceled", a.object, a.detail)
 		}
 	}
 
@@ -155,8 +155,8 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 			for k, a := range aiMetrics {
 				if strings.Contains(k, "alert") {
 					ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.alertcount, a.camera, "alert")
-				} else if strings.Contains(k, "cancelled") {
-					ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.alertcount, a.camera, "cancelled")
+				} else if strings.Contains(k, "canceled") {
+					ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.alertcount, a.camera, "canceled")
 				}
 			}
 		case "ai_duration_distinct":
@@ -166,10 +166,10 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 						ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.duration, a.camera, "alert", a.object, a.detail)
 						latestai[a.camera+"alert"] = a.latest
 					}
-				} else if strings.Contains(k, "cancelled") {
-					if a.latest != latestai[a.camera+"cancelled"] {
-						ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.duration, a.camera, "cancelled", a.object, a.detail)
-						latestai[a.camera+"cancelled"] = a.latest
+				} else if strings.Contains(k, "canceled") {
+					if a.latest != latestai[a.camera+"canceled"] {
+						ch <- prometheus.MustNewConstMetric(sm.Desc, sm.Type, a.duration, a.camera, "canceled", a.object, a.detail)
+						latestai[a.camera+"canceled"] = a.latest
 					}
 				}
 			}
@@ -368,11 +368,11 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 
 	} else if strings.Contains(line, "AI:") || strings.Contains(line, "DeepStack:") {
 		newLine := strings.Join(strings.Fields(line), " ")
-		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)(%|\])(\s)(\[.+\]\s|)(?P<duration>[0-9]*)ms`)
+		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled|canceled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)(%|\])(\s)(\[.+\]\s|)(?P<duration>[0-9]*)ms`)
 		match := r.FindStringSubmatch(newLine)
 
 		if len(match) == 0 {
-			r2 := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)`)
+			r2 := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled|canceled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)`)
 			match2 := r2.FindStringSubmatch(newLine)
 			if len(match2) == 0 {
 				parseErrors = appendCounterMap(parseErrors, line)
@@ -380,8 +380,8 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			}
 			return nil, nil, ""
 		} else {
-			if strings.Contains(newLine, "cancelled") {
-				return match, r, "cancelled"
+			if strings.Contains(newLine, "cancelled") || strings.Contains(newLine, "canceled") {
+				return match, r, "canceled"
 			} else {
 				return match, r, "alert"
 			}
