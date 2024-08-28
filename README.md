@@ -13,7 +13,6 @@ Flag     | Description | Default value | Required
 -|-|-|-
 `--telemetry.addr` | addresses on which to expose metrics | `:2112` | No
 `--logpath` | Directory path to the Blue Iris Logs | `C:\BlueIris\log\` | No
-`--logoffset` | Number in MB to offset the log file before reading. Helpful for large log files. 0 to disable | `10` | No
 `--telemetry.path` | URL path for surfacing collected metrics | `/metrics` | No
 `--service.install` | Install blueiris_exporter as a Windows service | None | No
 `--service.uninstall` | Uninstall blueiris_exporter Windows service | None | No

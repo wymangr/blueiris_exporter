@@ -10,7 +10,7 @@ type MetricInfo struct {
 	Name             string
 	Collect          bool
 	SecondaryCollect []int
-	Function         func(ch chan<- prometheus.Metric, m MetricInfo, SecMet []MetricInfo, logpath string, logOffset int64)
+	Function         func(ch chan<- prometheus.Metric, m MetricInfo, SecMet []MetricInfo, logpath string)
 	Server           string
 	Errors           *prometheus.CounterVec
 	Timer            *prometheus.Desc

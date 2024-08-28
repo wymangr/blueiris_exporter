@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -14,11 +13,10 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-func NewExporterBlueIris(selectedServerMetrics map[int]common.MetricInfo, logpath string, logOffset int64) (*ExporterBlueIris, error) {
+func NewExporterBlueIris(selectedServerMetrics map[int]common.MetricInfo, logpath string) (*ExporterBlueIris, error) {
 	return &ExporterBlueIris{
 		blueIrisServerMetrics: selectedServerMetrics,
 		logpath:               logpath,
-		lofOffset:             logOffset,
 	}, nil
 }
 
@@ -37,22 +35,17 @@ func (e *ExporterBlueIris) Collect(ch chan<- prometheus.Metric) {
 		if m.Collect {
 			name := m.Name
 			wg.Add(1)
-			go CollectMetrics(&wg, ch, m, name, e.logpath, e.lofOffset)
+			go CollectMetrics(&wg, ch, m, name, e.logpath)
 		}
 	}
 
 	wg.Wait()
 }
 
-func start(logpath string, metricsPath string, port string, logOffset string) error {
+func start(logpath string, metricsPath string, port string) error {
 
 	var finalPort string
 	var finalLogpath string
-
-	finalLogOffset, errOffset := strconv.ParseInt(logOffset, 10, 64)
-	if errOffset != nil {
-		return errOffset
-	}
 
 	if strings.HasSuffix(logpath, `\`) {
 		finalLogpath = logpath
@@ -66,9 +59,11 @@ func start(logpath string, metricsPath string, port string, logOffset string) er
 		}
 	}
 
-	exporterBlueIris, _ := NewExporterBlueIris(blueIrisServerMetrics, finalLogpath, finalLogOffset)
+	exporterBlueIris, _ := NewExporterBlueIris(blueIrisServerMetrics, finalLogpath)
 	blueIrisReg := prometheus.NewRegistry()
 	blueIrisReg.MustRegister(exporterBlueIris, promcollectors.NewGoCollector())
+
+	blueIrisReg.Gather()
 
 	http.Handle(metricsPath, promhttp.HandlerFor(blueIrisReg, promhttp.HandlerOpts{}))
 
@@ -77,6 +72,7 @@ func start(logpath string, metricsPath string, port string, logOffset string) er
 	} else {
 		finalPort = ":" + port
 	}
+	common.BIlogger("Starting Blue Iris Exporter http server", "info")
 	err := http.ListenAndServe(finalPort, nil)
 	if err != nil {
 		return err
@@ -132,17 +128,13 @@ func main() {
 			"telemetry.path",
 			"URL path for surfacing collected metrics.",
 		).Default("/metrics").String()
-		logOffset = kingpin.Flag(
-			"logoffset",
-			"Size in MG to offset the logfile",
-		).Default("10").String()
 	)
 
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 
 	if *install {
-		err := installService(svcName, svcNameLong, *logpath, *metricsPath, *port, *logOffset)
+		err := installService(svcName, svcNameLong, *logpath, *metricsPath, *port)
 		if err != nil {
 			common.BIlogger(err.Error(), "error")
 		}
@@ -173,14 +165,13 @@ func main() {
 			common.BIlogger(err.Error(), "error")
 		}
 	} else {
-		var a string = fmt.Sprintf(`starting Blue Iris Exporter with the following:
+		var a string = fmt.Sprintf(`Starting Blue Iris Exporter with the following:
 		Log Path: %v
 		Metric Path: %v
-		Port: %v
-		Log Offset: %v MB`, *logpath, *metricsPath, *port, *logOffset)
+		Port: %v`, *logpath, *metricsPath, *port)
 		common.BIlogger(a, "info")
 
-		err := start(*logpath, *metricsPath, *port, *logOffset)
+		err := start(*logpath, *metricsPath, *port)
 		if err != nil {
 			common.BIlogger(fmt.Sprintf("Error starting blueiris_exporter. err: %v", err), "error")
 		}

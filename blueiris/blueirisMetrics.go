@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -25,51 +25,41 @@ type aidata struct {
 	latest     string
 }
 
-var latestai = make(map[string]string)
-var camerastatus = make(map[string]map[string]interface{})
-var diskStats = make(map[string]map[string]float64)
-
-// var pushes = make(map[string]map[string]interface{})
+var lastLogLine string = ""
+var lastLogFile string = ""
 
 var (
-	timeoutcount        float64
-	servererrorcount    float64
-	notrespondingcount  float64
-	errorMetricsTotal   float64
-	warningMetricsTotal float64
-	parseErrorsTotal    float64
-	restartCount        float64
-	aiErrorCount        float64
-	aiRestartingCount   float64
-	aiRestartedCount    float64
-	triggerCount        map[string]float64
-	pushCount           map[string]float64
-	errorMetrics        map[string]float64
-	warningMetrics      map[string]float64
-	parseErrors         map[string]float64
-	profileCount        map[string]float64
+	timeoutcount        float64                           = 0
+	servererrorcount    float64                           = 0
+	notrespondingcount  float64                           = 0
+	errorMetricsTotal   float64                           = 0
+	warningMetricsTotal float64                           = 0
+	parseErrorsTotal    float64                           = 0
+	restartCount        float64                           = 0
+	aiErrorCount        float64                           = 0
+	aiRestartingCount   float64                           = 0
+	aiRestartedCount    float64                           = 0
+	triggerCount        map[string]float64                = make(map[string]float64)
+	pushCount           map[string]float64                = make(map[string]float64)
+	errorMetrics        map[string]float64                = make(map[string]float64)
+	warningMetrics      map[string]float64                = make(map[string]float64)
+	parseErrors         map[string]float64                = make(map[string]float64)
+	profileCount        map[string]float64                = make(map[string]float64)
+	aiMetrics           map[string]aidata                 = make(map[string]aidata)
+	diskStats           map[string]map[string]float64     = make(map[string]map[string]float64)
+	camerastatus        map[string]map[string]interface{} = make(map[string]map[string]interface{})
+	latestai            map[string]string                 = make(map[string]string)
 )
 
-func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string, logOffset int64) {
+var mutex = sync.RWMutex{}
+
+func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.MetricInfo, logpath string) {
 
 	scrapeTime := time.Now()
-	aiMetrics := make(map[string]aidata)
-	errorMetrics = make(map[string]float64)
-	warningMetrics = make(map[string]float64)
-	triggerCount = make(map[string]float64)
-	pushCount = make(map[string]float64)
-	profileCount = make(map[string]float64)
-	errorMetricsTotal = 0
-	warningMetricsTotal = 0
-	parseErrorsTotal = 0
-	restartCount = 0
-	aiErrorCount = 0
-	aiRestartingCount = 0
-	aiRestartedCount = 0
-	timeoutcount = 0
-	servererrorcount = 0
-	notrespondingcount = 0
+	mutex.Lock()
+
 	parseErrors = make(map[string]float64)
+	startScanning := false
 
 	dir := logpath
 	files, err := ioutil.ReadDir(dir)
@@ -100,44 +90,55 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	}
 	defer file.Close()
 
-	offset := 0 - (logOffset * 1000000)
-	if offset != 0 {
-		file.Seek(offset, io.SeekEnd)
+	if lastLogFile != "" && lastLogFile != newestFile {
+		startScanning = true
 	}
+	lastLogFile = newestFile
+
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 
 	for scanner.Scan() {
-		match, r, matchType := findObject(scanner.Text())
-		if (matchType == "alert") || (matchType == "canceled") {
-			cameraMatch := r.SubexpIndex("camera")
-			durationMatch := r.SubexpIndex("duration")
-			objectMatch := r.SubexpIndex("object")
-			detailMatch := r.SubexpIndex("detail")
-
-			camera := match[cameraMatch]
-			duration, err := strconv.ParseFloat(match[durationMatch], 64)
-			if err != nil {
-				common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
-				ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
-				continue
+		if lastLogLine == scanner.Text() || lastLogLine == "" {
+			startScanning = true
+			if lastLogLine == "" {
+				lastLogLine = scanner.Text()
 			}
+			continue
+		}
 
-			alertcount := aiMetrics[camera+matchType].alertcount
-			alertcount++
+		if startScanning {
+			lastLogLine = scanner.Text()
+			match, r, matchType := findObject(scanner.Text())
+			if (matchType == "alert") || (matchType == "canceled") {
+				cameraMatch := r.SubexpIndex("camera")
+				durationMatch := r.SubexpIndex("duration")
+				objectMatch := r.SubexpIndex("object")
+				detailMatch := r.SubexpIndex("detail")
 
-			makeMap(camera, camerastatus)
-			camerastatus[camera]["status"] = 0.0
-			camerastatus[camera]["detail"] = "object"
-			aiMetrics[camera+matchType] = aidata{
-				camera:     camera,
-				duration:   duration,
-				object:     match[objectMatch],
-				alertcount: alertcount,
-				detail:     match[detailMatch],
-				latest:     scanner.Text(),
+				camera := match[cameraMatch]
+				duration, err := strconv.ParseFloat(match[durationMatch], 64)
+				if err != nil {
+					common.BIlogger(fmt.Sprintf("BlueIris - Error parsing duration float. Err: %v", err), "error")
+					ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues(err.Error()).Desc(), prometheus.CounterValue, 1, "BlueIris")
+					continue
+				}
+
+				alertcount := aiMetrics[camera+matchType].alertcount
+				alertcount++
+
+				makeMap(camera, camerastatus)
+				camerastatus[camera]["status"] = 0.0
+				camerastatus[camera]["detail"] = "object"
+				aiMetrics[camera+matchType] = aidata{
+					camera:     camera,
+					duration:   duration,
+					object:     match[objectMatch],
+					alertcount: alertcount,
+					detail:     match[detailMatch],
+					latest:     scanner.Text(),
+				}
 			}
-
 		}
 	}
 
@@ -269,6 +270,7 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	ch <- prometheus.MustNewConstMetric(m.Errors.WithLabelValues("BlueIris").Desc(), prometheus.CounterValue, 0, "BlueIris")
 	ch <- prometheus.MustNewConstMetric(m.Timer, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "BlueIris")
 
+	mutex.Unlock()
 }
 
 func makeMap(camera string, m map[string]map[string]interface{}) {
