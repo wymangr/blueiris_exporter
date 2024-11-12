@@ -428,135 +428,148 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			profileCount[profile] = 1
 		}
 	} else if strings.Contains(line, "Delete: ") && strings.HasPrefix(line, "0 ") {
-		r := regexp.MustCompile(`[APM]{2}\s(?P<folder>.+?)\s+Delete.+(\s|\[)((((?P<hoursused>[0-9]*)\/(?P<hourstotal>[0-9]*))\shrs,(\s(?P<sizeused>[\d\.]+)(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree))`)
-		match := r.FindStringSubmatch(line)
-		if len(match) == 0 {
-			r1 := regexp.MustCompile(`[APM]{2}\s(?P<folder>.+?)\s+Delete.+((((\s|\s\[)(?P<sizeused>\d+|\d+\.\d))(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree)`)
-			match1 := r1.FindStringSubmatch(line)
-			if len(match1) == 0 {
-				r2 := regexp.MustCompile(`[APM]{2}\s(?P<folder>.+?)\s+(?P<ignore>Delete:\s\d+\sitems\s\d.+)`)
-				match2 := r2.FindStringSubmatch(line)
-				ignore := r2.SubexpIndex("ignore")
-				if strings.Compare(match2[ignore], "") == 0 {
-					parseErrors = appendCounterMap(parseErrors, line)
-					parseErrorsTotal++
+		// Parse out the date
+		logr := regexp.MustCompile(`^.+(\.\d\d\d|\s[APM]{2})\s(?P<log>.+)`)
+		logmatch := logr.FindStringSubmatch(line)
+		if len(logmatch) != 0 {
+			loglineMatch := logr.SubexpIndex("log")
+			logline := logmatch[loglineMatch]
+			// The "Delete" lines should contain a size
+			if len(regexp.MustCompile(`\d(KB|K|MB|M|GB|G|TB|T)`).FindStringSubmatch(logline)) > 0 {
+				r := regexp.MustCompile(`(?P<folder>.+?)\s+Delete.+(\s|\[)((((?P<hoursused>[0-9]*)\/(?P<hourstotal>[0-9]*))\shrs,(\s(?P<sizeused>[\d\.]+)(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree))`)
+				match := r.FindStringSubmatch(logline)
+				if len(match) == 0 {
+
+					r1 := regexp.MustCompile(`(?P<folder>.+?)\s+Delete.+((((\s|\s\[)(?P<sizeused>[\d\.]+))(?P<sizeunit>\w*)\/(?P<sizelimit>[\d\.]+)(?P<sizelimitunit>\w+)),\s((?P<diskfree>[\d\.]+)(?P<freeunit>\w+))\sfree)`)
+					match1 := r1.FindStringSubmatch(logline)
+					if len(match1) == 0 {
+						r2 := regexp.MustCompile(`(?P<folder>.+?)\s+(?P<ignore>Delete:\s\d+\sitems\s\d.+)`)
+						match2 := r2.FindStringSubmatch(logline)
+						ignore := r2.SubexpIndex("ignore")
+						if strings.Compare(match2[ignore], "") == 0 {
+							parseErrors = appendCounterMap(parseErrors, line)
+							parseErrorsTotal++
+						}
+						return nil, nil, ""
+					}
+					folderMatch1 := r1.SubexpIndex("folder")
+					sizeusedMatch1 := r1.SubexpIndex("sizeused")
+					sizelimitMatch1 := r1.SubexpIndex("sizelimit")
+					diskfreeMatch1 := r1.SubexpIndex("diskfree")
+					sizeunitMatch1 := r1.SubexpIndex("sizeunit")
+					sizelimitunitMatch1 := r1.SubexpIndex("sizelimitunit")
+					freeunitMatch1 := r1.SubexpIndex("freeunit")
+
+					folder1 := match1[folderMatch1]
+
+					sizelimit1, err := convertBytes(match1[sizelimitMatch1], match1[sizelimitunitMatch1])
+					if err != nil {
+						common.BIlogger(fmt.Sprintf("Unable to get convert sizelimit Error: \n%v", err), "console")
+						return nil, nil, ""
+					}
+					diskfree1, err := convertBytes(match1[diskfreeMatch1], match1[freeunitMatch1])
+					if err != nil {
+						common.BIlogger(fmt.Sprintf("Unable to get convert diskfree Error: \n%v", err), "console")
+						return nil, nil, ""
+					}
+
+					if strings.Compare(match1[sizeunitMatch1], "") == 0 {
+						sizeused1, err := convertBytes(match1[sizeusedMatch1], match1[sizelimitunitMatch1])
+						if err != nil {
+							fmt.Println(line)
+							fmt.Println(match1[sizeusedMatch1])
+							fmt.Println(match1[sizelimitunitMatch1])
+							common.BIlogger(fmt.Sprintf("Unable to get convert sizeused Match1/sizelimitunitMatch1 Error: \n%v", err), "console")
+							return nil, nil, ""
+						}
+						sizePercent1 := (sizeused1 / sizelimit1) * 100
+						if _, ok := diskStats[folder1]; !ok {
+							diskStats[folder1] = make(map[string]float64)
+						}
+						diskStats[folder1]["diskfree"] = diskfree1
+						diskStats[folder1]["sizePercent"] = sizePercent1
+					} else {
+						sizeused1, err := convertBytes(match1[sizeusedMatch1], match1[sizeunitMatch1])
+						if err != nil {
+							fmt.Println(line)
+							common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch1/sizeunitMatch1 Error: \n%v", err), "console")
+							return nil, nil, ""
+						}
+						sizePercent1 := (sizeused1 / sizelimit1) * 100
+						if _, ok := diskStats[folder1]; !ok {
+							diskStats[folder1] = make(map[string]float64)
+						}
+						diskStats[folder1]["diskfree"] = diskfree1
+						diskStats[folder1]["sizePercent"] = sizePercent1
+					}
+
+				} else {
+					folderMatch := r.SubexpIndex("folder")
+					hoursusedMatch := r.SubexpIndex("hoursused")
+					hourstotalMatch := r.SubexpIndex("hourstotal")
+					sizeusedMatch := r.SubexpIndex("sizeused")
+					sizelimitMatch := r.SubexpIndex("sizelimit")
+					diskfreeMatch := r.SubexpIndex("diskfree")
+					sizelimitunitMatch := r.SubexpIndex("sizelimitunit")
+					sizeunitMatch := r.SubexpIndex("sizeunit")
+					freeunitMatch := r.SubexpIndex("freeunit")
+
+					folder := match[folderMatch]
+					hoursused, err := convertStrFloat(match[hoursusedMatch])
+					if err != nil {
+						common.BIlogger(fmt.Sprintf("Unable to convert hoursused string to float: \n%v", hoursused), "console")
+						return nil, nil, ""
+					}
+					hourstotal, err := convertStrFloat(match[hourstotalMatch])
+					if err != nil {
+						common.BIlogger(fmt.Sprintf("Unable to convert hourstotal string to float: \n%v", hourstotal), "console")
+						return nil, nil, ""
+					}
+					sizelimit, err := convertBytes(match[sizelimitMatch], match[sizelimitunitMatch])
+					if err != nil {
+						common.BIlogger(fmt.Sprintf("Unable to get convert sizelimit Error: \n%v", err), "console")
+						return nil, nil, ""
+					}
+					diskfree, err := convertBytes(match[diskfreeMatch], match[freeunitMatch])
+					if err != nil {
+						common.BIlogger(fmt.Sprintf("Unable to get convert diskfree Error: \n%v", err), "console")
+						return nil, nil, ""
+					}
+
+					hourPercent := (hoursused / hourstotal) * 100
+
+					if strings.Compare(match[sizeunitMatch], "") == 0 {
+						sizeused, err := convertBytes(match[sizeusedMatch], match[sizelimitunitMatch])
+						if err != nil {
+							common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch/sizelimitunitMatch Error: \n%v", err), "console")
+							return nil, nil, ""
+						}
+						sizePercent := (sizeused / sizelimit) * 100
+
+						if _, ok := diskStats[folder]; !ok {
+							diskStats[folder] = make(map[string]float64)
+						}
+
+						diskStats[folder]["diskfree"] = diskfree
+						diskStats[folder]["hourPercent"] = hourPercent
+						diskStats[folder]["sizePercent"] = sizePercent
+					} else {
+						sizeused, err := convertBytes(match[sizeusedMatch], match[sizeunitMatch])
+						if err != nil {
+							common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch/sizeunitMatch Error: \n%v", err), "console")
+							return nil, nil, ""
+						}
+						sizePercent := (sizeused / sizelimit) * 100
+
+						if _, ok := diskStats[folder]; !ok {
+							diskStats[folder] = make(map[string]float64)
+						}
+
+						diskStats[folder]["diskfree"] = diskfree
+						diskStats[folder]["hourPercent"] = hourPercent
+						diskStats[folder]["sizePercent"] = sizePercent
+					}
 				}
-				return nil, nil, ""
-			}
-			folderMatch1 := r1.SubexpIndex("folder")
-			sizeusedMatch1 := r1.SubexpIndex("sizeused")
-			sizelimitMatch1 := r1.SubexpIndex("sizelimit")
-			diskfreeMatch1 := r1.SubexpIndex("diskfree")
-			sizeunitMatch1 := r1.SubexpIndex("sizeunit")
-			sizelimitunitMatch1 := r1.SubexpIndex("sizelimitunit")
-			freeunitMatch1 := r1.SubexpIndex("freeunit")
-
-			folder1 := match1[folderMatch1]
-
-			sizelimit1, err := convertBytes(match1[sizelimitMatch1], match1[sizelimitunitMatch1])
-			if err != nil {
-				common.BIlogger(fmt.Sprintf("Unable to get convert sizelimit Error: \n%v", err), "console")
-				return nil, nil, ""
-			}
-			diskfree1, err := convertBytes(match1[diskfreeMatch1], match1[freeunitMatch1])
-			if err != nil {
-				common.BIlogger(fmt.Sprintf("Unable to get convert diskfree Error: \n%v", err), "console")
-				return nil, nil, ""
-			}
-
-			if strings.Compare(match1[sizeunitMatch1], "") == 0 {
-				sizeused1, err := convertBytes(match1[sizeusedMatch1], match1[sizelimitunitMatch1])
-				if err != nil {
-					fmt.Println(line)
-					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused Match1/sizelimitunitMatch1 Error: \n%v", err), "console")
-					return nil, nil, ""
-				}
-				sizePercent1 := (sizeused1 / sizelimit1) * 100
-				if _, ok := diskStats[folder1]; !ok {
-					diskStats[folder1] = make(map[string]float64)
-				}
-				diskStats[folder1]["diskfree"] = diskfree1
-				diskStats[folder1]["sizePercent"] = sizePercent1
-			} else {
-				sizeused1, err := convertBytes(match1[sizeusedMatch1], match1[sizeunitMatch1])
-				if err != nil {
-					fmt.Println(line)
-					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch1/sizeunitMatch1 Error: \n%v", err), "console")
-					return nil, nil, ""
-				}
-				sizePercent1 := (sizeused1 / sizelimit1) * 100
-				if _, ok := diskStats[folder1]; !ok {
-					diskStats[folder1] = make(map[string]float64)
-				}
-				diskStats[folder1]["diskfree"] = diskfree1
-				diskStats[folder1]["sizePercent"] = sizePercent1
-			}
-
-		} else {
-			folderMatch := r.SubexpIndex("folder")
-			hoursusedMatch := r.SubexpIndex("hoursused")
-			hourstotalMatch := r.SubexpIndex("hourstotal")
-			sizeusedMatch := r.SubexpIndex("sizeused")
-			sizelimitMatch := r.SubexpIndex("sizelimit")
-			diskfreeMatch := r.SubexpIndex("diskfree")
-			sizelimitunitMatch := r.SubexpIndex("sizelimitunit")
-			sizeunitMatch := r.SubexpIndex("sizeunit")
-			freeunitMatch := r.SubexpIndex("freeunit")
-
-			folder := match[folderMatch]
-			hoursused, err := convertStrFloat(match[hoursusedMatch])
-			if err != nil {
-				common.BIlogger(fmt.Sprintf("Unable to convert hoursused string to float: \n%v", hoursused), "console")
-				return nil, nil, ""
-			}
-			hourstotal, err := convertStrFloat(match[hourstotalMatch])
-			if err != nil {
-				common.BIlogger(fmt.Sprintf("Unable to convert hourstotal string to float: \n%v", hourstotal), "console")
-				return nil, nil, ""
-			}
-			sizelimit, err := convertBytes(match[sizelimitMatch], match[sizelimitunitMatch])
-			if err != nil {
-				common.BIlogger(fmt.Sprintf("Unable to get convert sizelimit Error: \n%v", err), "console")
-				return nil, nil, ""
-			}
-			diskfree, err := convertBytes(match[diskfreeMatch], match[freeunitMatch])
-			if err != nil {
-				common.BIlogger(fmt.Sprintf("Unable to get convert diskfree Error: \n%v", err), "console")
-				return nil, nil, ""
-			}
-
-			hourPercent := (hoursused / hourstotal) * 100
-
-			if strings.Compare(match[sizeunitMatch], "") == 0 {
-				sizeused, err := convertBytes(match[sizeusedMatch], match[sizelimitunitMatch])
-				if err != nil {
-					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch/sizelimitunitMatch Error: \n%v", err), "console")
-					return nil, nil, ""
-				}
-				sizePercent := (sizeused / sizelimit) * 100
-
-				if _, ok := diskStats[folder]; !ok {
-					diskStats[folder] = make(map[string]float64)
-				}
-
-				diskStats[folder]["diskfree"] = diskfree
-				diskStats[folder]["hourPercent"] = hourPercent
-				diskStats[folder]["sizePercent"] = sizePercent
-			} else {
-				sizeused, err := convertBytes(match[sizeusedMatch], match[sizeunitMatch])
-				if err != nil {
-					common.BIlogger(fmt.Sprintf("Unable to get convert sizeused sizeusedMatch/sizeunitMatch Error: \n%v", err), "console")
-					return nil, nil, ""
-				}
-				sizePercent := (sizeused / sizelimit) * 100
-
-				if _, ok := diskStats[folder]; !ok {
-					diskStats[folder] = make(map[string]float64)
-				}
-
-				diskStats[folder]["diskfree"] = diskfree
-				diskStats[folder]["hourPercent"] = hourPercent
-				diskStats[folder]["sizePercent"] = sizePercent
 			}
 		}
 
