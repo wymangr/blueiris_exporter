@@ -2,6 +2,8 @@
 Prometheus exporter for Blue Iris.
 Confirmed working on Blue Iris version's 5.5.0.12 to 5.9.2.2
 
+>**Attention: blueiris_exporter is currently not combitible with Blue Iris version >=6. There is currently no ETA on when/if support will be added.**
+
 If you increment `parse_errors` metrics, please send me the details and I will work on adding support for it. Blue Iris has changed it's log format for AI a few times and I'm working on adding support for all of it. Also, if you have any ideas for different metrics, let me know! 
 
 ## Todo
