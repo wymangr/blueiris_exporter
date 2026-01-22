@@ -1,0 +1,111 @@
+loki.source.syslog "blue_iris" {
+  listener {
+    address      = "127.0.0.1:1515"
+    protocol     = "tcp"
+    idle_timeout = "2h"
+    labels       = { job = "blue_iris" }
+  }
+  forward_to = [loki.process.blue_iris_parsing.receiver]
+}
+
+loki.process "blue_iris_parsing" {
+  stage.regex {
+    expression = `^<.*\d+Z\s+\S+\s+\S+\s+(?:\357\273\277)?(?P<object>\S+)\s+(?P<blue_iris_level>\d+)\s+-\s+(?P<message>.*)$`
+  }
+
+  stage.replace {
+    source     = "object"
+    expression = `^\357\273\277`
+    replace    = ""
+  }
+
+  stage.regex {
+    source = "message"
+    expression = `(?i)(?:Trigger: Alert (?P<alt_type>\w+) \[(?P<alt_detail>[^\]]+)\]|AI: \[(?P<ai_raw_obj>[^\]]+)\] (?P<ai_obj>[^:]+):(?P<ai_perc>\d+%)).*?\s+(?P<ms_val>\d+)ms`
+  }
+
+  stage.regex {
+    source = "message"
+    expression = `(?i)(?P<h_used>\d+)/(?P<h_total>\d+)\s+hrs,\s+(?P<d_used>[\d\.]+)/(?P<d_total>[\d\.]+)GB,\s+(?P<d_free>[\d\.]+)GB\s+free`
+  }
+
+  stage.template {
+    source   = "t_level"
+    template = `{{ if eq .blue_iris_level "0" }}info{{ else if eq .blue_iris_level "1" }}warning{{ else if eq .blue_iris_level "2" }}error{{ else if eq .blue_iris_level "10" }}info{{ else }}info{{ end }}`
+  }
+
+  stage.template {
+    source   = "t_object"
+    template = `{{ .object | replace "\xef\xbb\xbf" "" }}`
+  }
+
+  stage.template {
+    source = "t_ai_object"
+    template = `{{ if .ai_obj }}{{ .ai_obj | replace "\xef\xbb\xbf" "" }}{{ else if eq .alt_type "canceled" }}canceled{{ else }}{{ .object | replace "\xef\xbb\xbf" "" }}{{ end }}`
+  }
+
+  stage.template {
+    source = "t_disk_pct"
+    template = `{{ if and .d_used .d_total }}{{ divf (mulf (.d_used | float64) 100.0) (.d_total | float64) | printf "%.2f" }}{{ end }}`
+  }
+
+  stage.template {
+    source = "t_hours_pct"
+    template = `{{ if and .h_used .h_total }}{{ divf (mulf (.h_used | float64) 100.0) (.h_total | float64) | printf "%.2f" }}{{ end }}`
+  }
+
+  stage.template {
+    source = "disk_used_mb"
+    template = `{{ if .d_used }}{{ mul (.d_used | float64) 1024 }}{{ end }}`
+  }
+
+  stage.template {
+    source = "disk_total_mb"
+    template = `{{ if .d_total }}{{ mul (.d_total | float64) 1024 }}{{ end }}`
+  }
+
+  stage.template {
+    source = "disk_free_mb"
+    template = `{{ if .d_free }}{{ mul (.d_free | float64) 1024 }}{{ end }}`
+  }
+
+  stage.template {
+    source = "t_alert_type"
+    template = `{{ if .alt_type }}{{ .alt_type }}{{ else if .ai_obj }}alert{{ end }}`
+  }
+  
+  stage.template {
+    source = "t_ai_detail"
+    template = `{{ if .alt_detail }}{{ .alt_detail }}{{ else }}{{ .ai_perc }}{{ end }}`
+  }
+
+  stage.labels {
+    values = {
+      object      = "t_object",
+      level       = "t_level",
+      alert_type  = "t_alert_type",
+      ai_object   = "t_ai_object",
+      ai_detail   = "t_ai_detail",
+      duration    = "ms_val",
+      hours_used  = "h_used",
+      hours_total = "h_total",
+      hours_pct   = "t_hours_pct",
+      disk_used   = "disk_used_mb",
+      disk_total  = "disk_total_mb",
+      disk_free   = "disk_free_mb",
+      disk_pct    = "t_disk_pct",
+    }
+  }
+
+  stage.output {
+    source = "message"
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://{{ your_loki_endpoint }}/loki/api/v1/push"
+  }
+}

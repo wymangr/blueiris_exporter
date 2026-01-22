@@ -1,8 +1,9 @@
 # blueiris_exporter
 Prometheus exporter for Blue Iris.
-Confirmed working on Blue Iris version's 5.5.0.12 to 5.9.2.2
+Confirmed working on Blue Iris version's 5.5.0.12 to 6.0.1.22
 
->**Attention: blueiris_exporter is currently not combitible with Blue Iris version >=6. There is currently no ETA on when/if support will be added.**
+In newer versions of Blue Iris, there is an option to export the logs to a SysLog server.
+As an alternative to the blueiris_exporter (or in addition to), you can follow [this guide](syslog/syslog_to_loki.md) to learn how to set this up.
 
 If you increment `parse_errors` metrics, please send me the details and I will work on adding support for it. Blue Iris has changed it's log format for AI a few times and I'm working on adding support for all of it. Also, if you have any ideas for different metrics, let me know! 
 
@@ -160,6 +161,12 @@ profile | Count of activation of profiles
 ai_error | Count of AI error log lines
 
 
-## Grafana Dashboard
-https://grafana.com/grafana/dashboards/17432-blueiris/
+## Grafana Dashboards
+
+### blueiris_exporter
+https://grafana.com/grafana/dashboards/17432-blueiris/<br>
+grafana_dashboard.json
 ![Grafana Dashboard](images/grafana-dashboard.png)
+
+### Blue Iris Loki
+syslog/grafana_dashboard_loki.json
