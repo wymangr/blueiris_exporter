@@ -58,7 +58,6 @@ func BlueIris(ch chan<- prometheus.Metric, m common.MetricInfo, SecMet []common.
 	scrapeTime := time.Now()
 	mutex.Lock()
 
-	parseErrors = make(map[string]float64)
 	startScanning := false
 
 	dir := logpath
@@ -336,19 +335,46 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 	} else if strings.HasSuffix(line, "AI: not responding") {
 		notrespondingcount++
 
-	} else if strings.Contains(line, "EXTERNAL") || strings.Contains(line, "MOTION") || strings.Contains(line, "DIO") || strings.Contains(line, "Triggered") || strings.Contains(line, "Re-triggered") {
-		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*(?P<motion>EXTERNAL|MOTION|DIO|Triggered|Re-triggered))`)
+	} else if strings.Contains(line, "AI:") || strings.Contains(line, "DeepStack:") || strings.Contains(line, "Trigger: Alert canceled") {
+		newLine := strings.Join(strings.Fields(line), " ")
+		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s|\sTrigger:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled|canceled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)(%|\])(\s)(\[.+\]\s|)(?P<duration>[0-9]*)ms`)
+		match := r.FindStringSubmatch(newLine)
+
+		if strings.Contains(newLine, "CodeProject.AI") {
+			return nil, nil, ""
+		}
+
+		if len(match) == 0 {
+			r2 := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled|canceled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)`)
+			match2 := r2.FindStringSubmatch(newLine)
+			if len(match2) == 0 {
+				parseErrors = appendCounterMap(parseErrors, line)
+				parseErrorsTotal++
+			}
+			return nil, nil, ""
+		} else {
+			if strings.Contains(newLine, "cancelled") || strings.Contains(newLine, "canceled") {
+				return match, r, "canceled"
+			} else {
+				return match, r, "alert"
+			}
+		}
+
+	} else if strings.Contains(line, "EXTERNAL") || strings.Contains(line, "MOTION") || strings.Contains(line, "DIO") || strings.Contains(line, "Triggered") || strings.Contains(line, "Re-triggered") || strings.Contains(line, "Trigger") {
+		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\s*(?P<motion>EXTERNAL|MOTION|DIO|Triggered|Re-triggered|Trigger))`)
 		match := r.FindStringSubmatch(line)
 		if len(match) == 0 {
 			parseErrors = appendCounterMap(parseErrors, line)
 			parseErrorsTotal++
 		} else {
-			cameraMatch := r.SubexpIndex("camera")
-			camera := match[cameraMatch]
-			triggerCount[camera]++
-			makeMap(camera, camerastatus)
-			camerastatus[camera]["status"] = 0.0
-			camerastatus[camera]["detail"] = "trigger"
+			if !strings.Contains(line, "Alert canceled") || !strings.Contains(line, "Alert confirmed") {
+				cameraMatch := r.SubexpIndex("camera")
+				camera := match[cameraMatch]
+				triggerCount[camera]++
+				makeMap(camera, camerastatus)
+				camerastatus[camera]["status"] = 0.0
+				camerastatus[camera]["detail"] = "trigger"
+			}
 		}
 
 	} else if strings.Contains(line, "Push:") {
@@ -366,27 +392,6 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 			detail := match[detailMatch]
 
 			pushCount[camera+"|"+status+"|"+detail]++
-		}
-
-	} else if strings.Contains(line, "AI:") || strings.Contains(line, "DeepStack:") {
-		newLine := strings.Join(strings.Fields(line), " ")
-		r := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled|canceled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)(%|\])(\s)(\[.+\]\s|)(?P<duration>[0-9]*)ms`)
-		match := r.FindStringSubmatch(newLine)
-
-		if len(match) == 0 {
-			r2 := regexp.MustCompile(`(?P<camera>[^\s\\]*)(\sAI:\s|\sDeepStack:\s)(\[Objects\]\s|Alert\s|\[.+\]\s|)(?P<object>[aA-zZ]*|cancelled|canceled)(\s|:)(\[|)(?P<detail>[0-9]*|.*)`)
-			match2 := r2.FindStringSubmatch(newLine)
-			if len(match2) == 0 {
-				parseErrors = appendCounterMap(parseErrors, line)
-				parseErrorsTotal++
-			}
-			return nil, nil, ""
-		} else {
-			if strings.Contains(newLine, "cancelled") || strings.Contains(newLine, "canceled") {
-				return match, r, "canceled"
-			} else {
-				return match, r, "alert"
-			}
 		}
 
 	} else if strings.Contains(line, "Signal:") {
@@ -615,11 +620,20 @@ func findObject(line string) (match []string, r *regexp.Regexp, matchType string
 }
 
 func appendCounterMap(m map[string]float64, key string) map[string]float64 {
-	if val, ok := m[key]; ok {
+	logr := regexp.MustCompile(`^.+(\.\d\d\d|\s[APM]{2})\s(?P<log>.+)`)
+	logmatch := logr.FindStringSubmatch(key)
+	
+	logKey := key
+	if len(logmatch) != 0 {
+		loglineMatch := logr.SubexpIndex("log")
+		logKey = logmatch[loglineMatch]
+	}
+	
+	if val, ok := m[logKey]; ok {
 		val++
-		m[key] = val
+		m[logKey] = val
 	} else {
-		m[key] = 1
+		m[logKey] = 1
 	}
 	return m
 }
