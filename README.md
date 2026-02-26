@@ -7,9 +7,6 @@ As an alternative to the blueiris_exporter (or in addition to), you can follow [
 
 If you increment `parse_errors` metrics, please send me the details and I will work on adding support for it. Blue Iris has changed it's log format for AI a few times and I'm working on adding support for all of it. Also, if you have any ideas for different metrics, let me know! 
 
-## Todo
-Tests
-
 ## Flags
 
 Flag     | Description | Default value | Required
