@@ -1,0 +1,54 @@
+level	time	object	message
+0 	1/1/2024 12:00:00.000 AM	App                 	Started version 5.5.0.12
+9 	1/1/2024 12:01:00.000 AM	FD                  	AI: [Objects] person:95% [73,82 282,357] 5356ms
+9 	1/1/2024 12:02:00.000 AM	BY                  	AI: [Faces] Unknown:87% [411,95 434,127] 1881ms
+0 	1/1/2024 12:03:00.000 AM	DW                  	AI: [ipcam-dark] Car:81% [207,110 447,318] 308ms
+0 	1/1/2024 12:04:00.000 AM	GarageExterior      	AI: [ipcam-general] person:81% [88,786 261,1244] 211ms
+0 	1/1/2024 12:05:00.000 AM	GATE-MASK           	AI: Alert cancelled [nothing found] 784ms
+0 	1/1/2024 12:06:00.000 AM	EastNorth           	AI: Alert canceled [nothing found] 275ms
+9 	1/1/2024 12:07:00.000 AM	FD                  	Trigger: Alert canceled [nothing found] 874ms
+9 	1/1/2024 12:08:00.000 AM	FD                  	Trigger: Alert canceled [occupied] 464ms
+1 	1/1/2024 12:09:00.000 AM	DW                  	AI: Alert cancelled [AI: not responding] 0ms
+0 	1/1/2024 12:10:00.000 AM	Court180            	AI: person:89%
+9 	1/1/2024 12:11:00.000 AM	AI                  	CodeProject.AI: custom models list updated
+2 	1/1/2024 12:12:00.000 AM	DW                  	AI: timeout
+2 	1/1/2024 12:13:00.000 AM	FD                  	AI: error 500
+2 	1/1/2024 12:14:00.000 AM	DW                  	AI: not responding
+0 	1/1/2024 12:15:00.000 AM	App                 	AI is being restarted
+0 	1/1/2024 12:16:00.000 AM	App                 	AI has been started
+0 	1/1/2024 12:17:00.000 AM	App                 	AI has been restarted
+0 	1/1/2024 12:18:00.000 AM	App                 	AI: is being started
+0 	1/1/2024 12:19:00.000 AM	App                 	AI: has been started
+2 	1/1/2024 12:20:00.000 AM	DW                  	DeepStack: Server error
+0 	1/1/2024 12:21:00.000 AM	FD                  	DeepStack: [Objects] person:85% [100,200 300,400] 500ms
+3 	1/1/2024 12:22:00.000 AM	FD                  	MOTION_A
+3 	1/1/2024 12:23:00.000 AM	FD                  	EXTERNAL
+3 	1/1/2024 12:24:00.000 AM	FD                  	DIO
+3 	1/1/2024 12:25:00.000 AM	GarageExterior      	Triggered: Motion_AB
+3 	1/1/2024 12:26:00.000 AM	SouthEast           	Triggered: Group
+3 	1/1/2024 12:27:00.000 AM	Patio               	Re-trigger: MOTION_A
+3 	1/1/2024 12:28:00.000 AM	FD                  	Trigger: Motion_A
+0 	1/1/2024 12:29:00.000 AM	FD                  	Push: OK to Garret's S21 Ultra
+4 	1/1/2024 12:30:00.000 AM	DW                  	Signal: restored
+1 	1/1/2024 12:31:00.000 AM	DW                  	Signal: network retry
+1 	1/1/2024 12:32:00.000 AM	DW                  	Signal: Socket closed
+0 	1/1/2024 12:33:00.000 AM	App                 	Current profile: Day
+0 	1/1/2024 12:34:00.000 AM	App                 	Current profile: Night
+0 	1/1/2024 12:35:00.000 AM	Data Drive          	Delete: nothing to do [718/720 hrs, 488.9/800.0GB, 442.2GB free]
+0 	1/1/2024 12:36:00.000 AM	Data Drive          	Delete: nothing to do [718/720 hrs, 488.8G/800.0G, 441.9G free]
+0 	1/1/2024 12:37:00.000 AM	Stored              	Delete: nothing to do [0/336 hrs, 0/900.0G, 931.3G free]
+0 	1/1/2024 12:38:00.000 AM	Alerts              	Delete: 3 items 4.43G [720/720 hrs, 454.7G/800.0G, 476.4G free]
+0 	1/1/2024 12:39:00.000 AM	Aux 7               	Delete: over quota 48/48 hrs, 4.40/100.0GB, 783.2GB free
+0 	1/1/2024 12:40:00.000 AM	New                 	Delete: nothing to do [4.39T/4.39T, 295.0G free]
+0 	1/1/2024 12:41:00.000 AM	Clips               	Delete: nothing to do [99.9/100.0GB, 576.0GB free]
+0 	1/1/2024 12:42:00.000 AM	Stored2             	Delete: 2 items 673.0M [300.3G/300.0G, 630.2G free]
+0 	1/1/2024 12:43:00.000 AM	Aux 6               	Delete: 30 items 9.07MB
+0 	1/1/2024 12:44:00.000 AM	Alerts              	Delete: 1 items 853KB 496 locked
+2 	1/1/2024 12:45:00.000 AM	App                 	Your license is not authorized to use this version
+1 	1/1/2024 12:46:00.000 AM	App                 	[Maintenance and support plan expired; see Settings]
+4 	1/1/2024 12:47:00.000 AM	BY                  	Signal: link down
+0 	1/1/2024 12:48:00.000 AM	FD                  	Signal: restored
+10	1/1/2024 12:49:00.000 AM	local_console       	[::]: Login
+0 	1/1/2024 12:50:00.000 AM	DW                  	Push: Error to Garret's S21 Ultra
+2 	1/1/2024 12:51:00.000 AM	FD                  	Connection refused
+1 	1/1/2024 12:52:00.000 AM	DW                  	HW decode could not start (-40)
